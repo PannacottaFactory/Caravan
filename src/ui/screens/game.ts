@@ -19,8 +19,8 @@ import {
   type ResourceId,
   type Stats,
 } from '../../engine';
-import { itemIcon } from '../assets';
-import { fmt, glyph, holdRepeat, num } from '../components/common';
+import { itemArt } from '../art';
+import { fmt, holdRepeat, num } from '../components/common';
 import { eventOverlay } from '../components/events';
 import { crest, iconButton, segmented } from '../components/ui';
 import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
@@ -174,7 +174,7 @@ function marketFooter(kind: 'buy' | 'sell', g: GameState, stats: Stats): Templat
   const empty = p.error === 'nothingToSell';
   return actionBar(
     html`${change('Gold', g.gold, g.gold + p.earnings, false)} ${change('Cargo', weight, weight - p.weight, false, ` / ${fmt(cap)}`)}
-      ${stats.global.sellBonus ? html`<span class="bonus-chip">${glyph(itemIcon('hand-of-midas'))} +${stats.global.sellBonus} Midas</span>` : nothing}`,
+      ${stats.global.sellBonus ? html`<span class="bonus-chip">${itemArt('hand-of-midas', 'bonus-chip__art')} +${stats.global.sellBonus} Midas</span>` : nothing}`,
     empty ? { text: 'Select goods to sell', error: false } : p.error ? { text: ERROR_MESSAGES[p.error], error: true } : null,
     html`${icon('coins')} Sell`,
     !p.error,
@@ -300,7 +300,7 @@ export function gameScreen(): TemplateResult {
             : nothing}
           ${g.merchantItem
             ? html`<button class="icon-btn icon-btn--item" @click=${() => openModal('item')} title=${getMerchantItem(g.merchantItem).name}
-                aria-label="Your artifact">${glyph(itemIcon(g.merchantItem))}</button>`
+                aria-label="Your artifact">${itemArt(g.merchantItem)}</button>`
             : nothing}
           ${soundToggle()}
         </div>

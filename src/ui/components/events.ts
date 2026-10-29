@@ -1,4 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit-html';
+import { keyed } from 'lit-html/directives/keyed.js';
 import {
   ACHIEVEMENTS,
   CREW_POINTS,
@@ -12,9 +13,10 @@ import {
   type GameState,
   type Stats,
 } from '../../engine';
-import { img, itemIcon, powerIcon } from '../assets';
+import { img } from '../assets';
+import { disasterArt, itemArt, powerArt } from '../art';
 import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
-import { fmt, glyph, num } from './common';
+import { fmt, num } from './common';
 import { crest } from './ui';
 import { backToMenu, dispatch, openRecords, retryDay, shareScore, startGame, state, submitCurrentScore, update } from '../store';
 
@@ -53,14 +55,14 @@ function merchant(g: GameState, stats: Stats): TemplateResult {
             const active = item.id === sel.id;
             return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''} ${g.gold < p ? 'is-poor' : ''}"
               @click=${() => update({ merchantChoice: item.id })}>
-              <span class="pick__icon">${glyph(itemIcon(item.id))}</span>
+              <span class="pick__icon">${itemArt(item.id)}</span>
               <span class="pick__name">${item.name}</span>
               <span class="pick__price">${p}${coinArt('pick__coin')}</span>
             </button>`;
           })}
         </div>
         <div class="pick-detail">
-          <span class="pick-detail__icon">${glyph(itemIcon(sel.id))}</span>
+          ${keyed(sel.id, html`<span class="pick-detail__icon">${itemArt(sel.id)}</span>`)}
           <h4>${sel.name}</h4>
           <p>${sel.description}</p>
           <p class="pick-detail__price">${price}${coinArt('pick__coin')} <small>you have ${fmt(g.gold)}</small></p>
@@ -90,13 +92,13 @@ function witch(): TemplateResult {
           ${WITCH_POWERS.map((p) => {
             const active = p.id === sel.id;
             return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''}" @click=${() => update({ witchChoice: p.id })}>
-              <span class="pick__icon">${glyph(powerIcon(p.id))}</span>
+              <span class="pick__icon">${powerArt(p.id)}</span>
               <span class="pick__name">${p.name}</span>
             </button>`;
           })}
         </div>
         <div class="pick-detail">
-          <span class="pick-detail__icon">${glyph(powerIcon(sel.id))}</span>
+          ${keyed(sel.id, html`<span class="pick-detail__icon">${powerArt(sel.id)}</span>`)}
           <h4>${sel.name}</h4>
           <div class="tradeoff">
             <p class="tradeoff__gain">${icon('arrowUp')} ${sel.bonus}</p>
@@ -119,7 +121,7 @@ function disaster(g: GameState): TemplateResult {
   return dialog(
     'disaster',
     html`
-      <div class="alert-icon">${icon('warning')}</div>
+      <div class="alert-icon alert-icon--art">${disasterArt(d.id)}</div>
       <p class="dialog__eyebrow">Disaster</p>
       <h3 class="dialog__title">Bad news, traveler</h3>
       <p class="dialog__text">${d.description}</p>
@@ -204,7 +206,7 @@ function victory(g: GameState): TemplateResult {
             ${RESOURCE_IDS.filter((id) => id !== 'food' && g.inventory[id] > 0).map((id) =>
               row(resourceArt(id), RESOURCES[id].name, g.inventory[id], RESOURCES[id].points, s.resources[id]),
             )}
-            ${s.statuette ? row(glyph(itemIcon('wooden-statuette')), 'Wooden statuette', g.traders + g.camels, 500, s.statuette) : nothing}
+            ${s.statuette ? row(itemArt('wooden-statuette'), 'Wooden statuette', g.traders + g.camels, 500, s.statuette) : nothing}
           </ul>
           ${r?.newlyUnlockedFactions.length || r?.newAchievements.length
             ? html`<div class="unlocks">

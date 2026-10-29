@@ -1,8 +1,8 @@
 import { html, nothing, type TemplateResult } from 'lit-html';
 import { ACHIEVEMENTS, bestScore, FACTIONS, getMerchantItem, isFactionUnlocked } from '../../engine';
-import { itemIcon } from '../assets';
+import { itemArt } from '../art';
 import { coinArt, icon, resourceArt } from '../icons';
-import { fmt, glyph } from './common';
+import { fmt } from './common';
 import { crest, segmented } from './ui';
 import { abandonGameAndChooseFaction, backToMenu, closeModal, loadBoard, setRecordsTab, state } from '../store';
 
@@ -162,7 +162,7 @@ const item = () => {
   const def = getMerchantItem(id);
   return modal(
     def.name,
-    html`<div class="item-recap"><span class="pick-detail__icon">${glyph(itemIcon(id))}</span><p>${def.description}</p></div>`,
+    html`<div class="item-recap"><span class="pick-detail__icon">${itemArt(id)}</span><p>${def.description}</p></div>`,
     undefined,
     'sm',
   );

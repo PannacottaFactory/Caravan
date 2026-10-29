@@ -44,12 +44,48 @@ export const artDefs = (): TemplateResult => html`<svg class="art-defs" aria-hid
     <linearGradient id="g-sand" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffd27a" /><stop offset="1" stop-color="#e59a3c" />
     </linearGradient>
+    <linearGradient id="g-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d49660" /><stop offset="1" stop-color="#8a5530" />
+    </linearGradient>
+    <linearGradient id="g-canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5ead0" /><stop offset="1" stop-color="#c2aa7a" />
+    </linearGradient>
+    <linearGradient id="g-leather" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cf7a45" /><stop offset="1" stop-color="#7a3a1e" />
+    </linearGradient>
+    <linearGradient id="g-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#78b4ff" /><stop offset="1" stop-color="#2d4ea6" />
+    </linearGradient>
+    <linearGradient id="g-magic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8f0ff" /><stop offset="1" stop-color="#4a86ff" />
+    </linearGradient>
+    <linearGradient id="g-violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a77cf5" /><stop offset="1" stop-color="#5a33b5" />
+    </linearGradient>
+    <linearGradient id="g-heart" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8b98" /><stop offset="1" stop-color="#c52e4c" />
+    </linearGradient>
+    <linearGradient id="g-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fdcff" /><stop offset="1" stop-color="#2a7fc4" />
+    </linearGradient>
+    <linearGradient id="g-leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6fd38b" /><stop offset="1" stop-color="#2a8a52" />
+    </linearGradient>
+    <linearGradient id="g-pig" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb8c9" /><stop offset="1" stop-color="#e0718f" />
+    </linearGradient>
+    <linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7d8794" /><stop offset="1" stop-color="#3b424c" />
+    </linearGradient>
+    <radialGradient id="g-crystal" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#f4ecff" /><stop offset="0.45" stop-color="#a98cf2" /><stop offset="1" stop-color="#4a2f9e" />
+    </radialGradient>
   </defs>
 </svg>`;
 
 // ------------------------------------------------------------------ illustrated icons (64×64)
 
-const RESOURCE_ART: Record<ResourceId, SVGTemplateResult> = {
+export const RESOURCE_ART: Record<ResourceId, SVGTemplateResult> = {
   food: svg`
     <ellipse cx="32" cy="57" rx="18" ry="3" fill="#000" opacity=".18"/>
     <g transform="rotate(8 32 32)">

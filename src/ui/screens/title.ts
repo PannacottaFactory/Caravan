@@ -73,7 +73,7 @@ export function titleScreen(): TemplateResult {
       </div>
 
       <footer class="title-footer">
-        <span>Made by Pannacotta Factory · Music by Tyler Cline</span>
+        <span>Made by Pannacotta · Music by Tyler Cline</span>
         <button class="link-btn" @click=${() => openModal('credits')}>Credits</button>
         ${p.totals.gamesFinished ? html`<span>${p.totals.gamesFinished} journeys completed</span>` : nothing}
       </footer>

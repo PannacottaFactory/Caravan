@@ -1,6 +1,6 @@
 // Asset paths, resolved against Vite's base URL (works on GitHub Pages sub-paths).
 
-import type { ResourceId } from '../engine';
+
 
 // Absolute URL: these paths are also used inside CSS custom properties (masks, backgrounds),
 // where a relative URL would be resolved against the stylesheet instead of the page.
@@ -8,6 +8,3 @@ export const asset = (path: string): string => new URL(`${import.meta.env.BASE_U
 
 export const img = (name: string): string => asset(`img/${name}.png`);
 
-export const resourceIcon = (id: ResourceId): string => img(`res-${id}`);
-export const itemIcon = (id: string): string => img(`item-${id}`);
-export const powerIcon = (id: string): string => img(`power-${id}`);
