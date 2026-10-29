@@ -679,10 +679,18 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 }
 .crest-line {
   display: grid;
-  grid-template-columns: repeat(22, minmax(0, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 6px 8px;
+  justify-items: center;
 }
-.crest-line .crest-chip,
+.crest-line .crest-chip {
+  width: 100%;
+  max-width: 36px;
+  transition: transform 0.3s var(--spring);
+}
+.crest-line .crest-chip:hover {
+  transform: translateY(-3px) scale(1.08);
+}
 .crest-line .crest--mini {
   width: 100%;
   height: auto;
@@ -717,6 +725,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 
 /* Daily card: quieter than the journey card */
 .daily-card {
+  justify-content: space-between;
   background: rgb(30 22 19 / 0.8);
   box-shadow: none;
   animation-delay: 0.5s;
@@ -760,7 +769,6 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   height: 46px;
 }
 .daily-card__actions {
-  margin-top: auto;
   display: flex;
   gap: 8px;
 }
@@ -768,7 +776,6 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   flex: 1;
 }
 .daily-card__done {
-  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
