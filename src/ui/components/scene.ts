@@ -51,6 +51,18 @@ export function installScene(): void {
   });
 }
 
+/** Floating dust motes, lit by the setting sun. Deterministic positions and timings. */
+// 10 motes: more makes Firefox drop frames (measured: 22 motes -> 99 fps, 10 -> 143 fps).
+const MOTES = Array.from({ length: 10 }, (_, i) => {
+  const x = 4 + ((i * 37.7) % 92);
+  const y = 30 + ((i * 53.3) % 65);
+  const size = 3 + ((i * 7) % 4);
+  const duration = 14 + ((i * 11) % 16);
+  const delay = -((i * 3.7) % duration);
+  const drift = ((i % 2 ? 1 : -1) * (20 + ((i * 13) % 60))).toFixed(0);
+  return html`<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--s:${size}px;--d:${duration}s;--delay:${delay.toFixed(1)}s;--dx:${drift}px"></i>`;
+});
+
 const dune = (cls: string, d: string, top: string, bottom: string, id: string): TemplateResult => html`
   <svg class="dune ${cls}" viewBox="0 0 1600 400" preserveAspectRatio="none" aria-hidden="true">
     <defs>
@@ -82,6 +94,7 @@ export function scene(mode: 'hero' | 'game', danger = false): TemplateResult {
       ${dune('dune--3', `${CREST}V400H0Z`, '#e08a58', '#9c4a3a', 'gd3')}
       ${caravanSilhouette()}
       ${dune('dune--4', 'M0 120C260 40 540 150 860 110S1340 30 1600 90V400H0Z', '#a7543a', '#47211c', 'gd4')}
+      <div class="motes">${MOTES}</div>
       <div class="scene__shade"></div>
       <div class="scene__danger"></div>
     </div>

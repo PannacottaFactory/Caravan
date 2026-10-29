@@ -582,7 +582,12 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: rise 0.9s var(--ease) backwards 0.12s;
+  animation: rise 0.9s var(--ease) backwards 0.12s, title-float 7s ease-in-out 1s infinite alternate;
+  transform-origin: 30% 60%;
+}
+@keyframes title-float {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(-5px) rotate(-0.6deg); }
 }
 .hero__tagline {
   font-size: 1.15rem;
@@ -2275,6 +2280,69 @@ a.btn {
   pointer-events: none;
 }
 
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  z-index: 60;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #33281f;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-md);
+  font-size: 0.85rem;
+  color: var(--text-2);
+  pointer-events: none;
+}
+.tooltip strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.tooltip--right {
+  transform: translateY(-50%);
+  animation: tip-right 0.25s var(--ease);
+}
+.tooltip--top {
+  transform: translate(-50%, -100%);
+  animation: tip-top 0.25s var(--ease);
+}
+@keyframes tip-right {
+  from { opacity: 0; transform: translate(-6px, -50%); }
+}
+@keyframes tip-top {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 6px)); }
+}
+.twist,
+.unlock-chip {
+  cursor: help;
+}
+.twist:hover,
+.twist:focus-visible {
+  border-color: var(--line-2);
+  background: rgb(255 240 220 / 0.07);
+}
+
+/* Dust motes */
+.motes i {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 230 180 / 0.95), rgb(255 190 120 / 0) 70%);
+  opacity: 0;
+  animation: mote var(--d) linear var(--delay) infinite;
+  will-change: transform, opacity;
+}
+@keyframes mote {
+  0% { opacity: 0; transform: translate3d(0, 0, 0); }
+  15% { opacity: 0.9; }
+  85% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate3d(var(--dx), -26vh, 0); }
+}
+
 /* Daily twists */
 .twists {
   display: flex;
@@ -2424,13 +2492,16 @@ a.btn {
   gap: 16px;
 }
 .daily-card {
-  padding: 22px 24px;
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: linear-gradient(140deg, rgb(244 183 74 / 0.16), rgb(30 22 19 / 0.97) 55%);
-  border-color: var(--gold-line);
-  animation: rise 0.9s var(--ease) backwards 0.35s;
+  gap: 12px;
+  background: rgb(30 22 19 / 0.82);
+  box-shadow: none;
+  animation: rise 0.9s var(--ease) backwards 0.5s;
+}
+.daily-card .daily-card__body strong {
+  font-size: 1.3rem;
 }
 .daily-card__head {
   display: flex;

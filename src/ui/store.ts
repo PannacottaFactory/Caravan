@@ -95,6 +95,16 @@ export interface AppState {
   submission: Submission;
   shareCard: { status: 'idle' | 'loading' | 'ready' | 'error'; url?: string; blob?: Blob };
   toasts: Toast[];
+  /** Floating tooltip (rendered above everything, never clipped). */
+  tip: Tip | null;
+}
+
+export interface Tip {
+  title: string;
+  body: string;
+  x: number;
+  y: number;
+  side: 'right' | 'top';
 }
 
 const initialGame = loadGame();
@@ -122,6 +132,7 @@ export const state: AppState = {
   submission: { seed: null, status: 'idle' },
   shareCard: { status: 'idle' },
   toasts: [],
+  tip: null,
 };
 
 setMuted(state.settings.muted);
@@ -159,7 +170,7 @@ export function toast(text: string, kind: Toast['kind'] = 'info', duration = 260
 
 export function goTo(screen: Screen): void {
   playSfx('click');
-  update({ screen, modal: null });
+  update({ screen, modal: null, tip: null });
 }
 
 export function openModal(modal: Modal): void {
@@ -537,4 +548,21 @@ export function dangerTheme(): boolean {
   if (state.screen === 'game') return state.game?.mode === 'traveler';
   if (state.screen === 'factions' || state.screen === 'prepare') return state.mode === 'traveler';
   return false;
+}
+
+// ------------------------------------------------------------------ tooltips
+
+export function showTip(e: Event, title: string, body: string, side: Tip['side'] = 'right'): void {
+  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  // Not enough room on the right: show it above instead.
+  if (side === 'right' && r.right + 300 > window.innerWidth) side = 'top';
+  const tip: Tip =
+    side === 'right'
+      ? { title, body, side, x: r.right + 12, y: r.top + r.height / 2 }
+      : { title, body, side, x: r.left + r.width / 2, y: r.top - 10 };
+  update({ tip });
+}
+
+export function hideTip(): void {
+  if (state.tip) update({ tip: null });
 }

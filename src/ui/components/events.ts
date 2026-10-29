@@ -19,6 +19,7 @@ import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
 import { fmt, formatDay, num } from './common';
 import { crest, segmented } from './ui';
 import { recap } from './recap';
+import { withTip } from './tooltip';
 import { backToMenu, dispatch, goTo, openRecords, retryDay, openShare, startGame, state, submitCurrentScore, update } from '../store';
 
 function dialog(kind: string, content: TemplateResult): TemplateResult {
@@ -223,7 +224,12 @@ function victory(g: GameState): TemplateResult {
           ${r?.newlyUnlockedFactions.length || r?.newAchievements.length
             ? html`<div class="unlocks">
                 ${r.newlyUnlockedFactions.map((id) => html`<span class="unlock-chip">${crest(id, 'crest--xs')} ${getFaction(id).name} unlocked</span>`)}
-                ${r.newAchievements.map((id) => html`<span class="unlock-chip unlock-chip--gold">${icon('trophy')} ${ACHIEVEMENTS.find((x) => x.id === id)?.name ?? id}</span>`)}
+                ${r.newAchievements.map((id) => {
+                  const a = ACHIEVEMENTS.find((x) => x.id === id);
+                  const tip = withTip(`Achievement · ${a?.name ?? id}`, a?.description ?? '', 'top');
+                  return html`<span class="unlock-chip unlock-chip--gold" tabindex="0"
+                    @pointerenter=${tip.show} @pointerleave=${tip.hide} @focus=${tip.show} @blur=${tip.hide}>${icon('trophy')} ${a?.name ?? id}</span>`;
+                })}
               </div>`
             : nothing}
           </div>`)}
