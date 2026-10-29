@@ -4,6 +4,7 @@ export * from './state';
 export * from './actions';
 export * from './stats';
 export * from './scoring';
+export * from './daily';
 export * from './meta';
 export * from './data/resources';
 export * from './data/modes';

@@ -5,7 +5,9 @@ import {
   closeEvent,
   finishGame,
   openPendingEvent,
+  recordAction,
   startNewDay,
+  type DayAction,
   type GameEvent,
   type GameState,
 } from './state';
@@ -71,7 +73,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       if (preview.error) return fail(state, preview.error);
       s.gold -= preview.cost;
       for (const id of RESOURCE_IDS) s.inventory[id] += action.quantities[id] ?? 0;
-      endDay(s, state, events);
+      endDay(s, state, events, action.type as DayAction);
       break;
     }
     case 'sell': {
@@ -80,7 +82,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       if (preview.error) return fail(state, preview.error);
       s.gold += preview.earnings;
       for (const id of RESOURCE_IDS) s.inventory[id] -= action.quantities[id] ?? 0;
-      endDay(s, state, events);
+      endDay(s, state, events, action.type as DayAction);
       break;
     }
     case 'recruit': {
@@ -89,7 +91,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       if (s.gold < cost) return fail(state, 'notEnoughGold');
       s.gold -= cost;
       addTrader(s);
-      endDay(s, state, events);
+      endDay(s, state, events, action.type as DayAction);
       break;
     }
     case 'addCamel': {
@@ -98,7 +100,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       if (s.gold < cost) return fail(state, 'notEnoughGold');
       s.gold -= cost;
       s.camels += 1;
-      endDay(s, state, events);
+      endDay(s, state, events, action.type as DayAction);
       break;
     }
     case 'save': {
@@ -106,7 +108,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
       s.gold += savingAmount(s);
       applyEffect(s, { kind: 'add', target: 'savingRate', value: -computeStats(s).global.savingDecay });
       s.counters.saves += 1;
-      endDay(s, state, events);
+      endDay(s, state, events, action.type as DayAction);
       break;
     }
 
@@ -171,7 +173,8 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
  * End of a day action: food consumption (except on the last day), then defeat check,
  * then the next day — or victory if this was the last day.
  */
-function endDay(s: GameState, before: GameState, events: GameEvent[]): void {
+function endDay(s: GameState, before: GameState, events: GameEvent[], action: DayAction): void {
+  recordAction(s, action);
   if (s.day >= s.maxDay) {
     finishGame(s, events);
     return;

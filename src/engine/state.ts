@@ -47,6 +47,24 @@ export interface GameState {
   /** State right before the action that caused the defeat ("Continue" restores it). */
   retryState: GameState | null;
   score: ScoreBreakdown | null;
+  /** Day-by-day record for the end-of-journey recap (missing in saves made before it existed). */
+  history?: DayRecord[];
+  /** Date (YYYY-MM-DD, UTC) when this game is the daily challenge, otherwise null. */
+  daily?: string | null;
+}
+
+export type DayAction = 'buy' | 'sell' | 'recruit' | 'addCamel' | 'save';
+
+export interface DayRecord {
+  day: number;
+  /** Gold at the start of the day (after income), or at the end for the final record. */
+  gold: number;
+  /** Fortune: what the score would be at that moment. */
+  worth: number;
+  /** Action chosen that day. */
+  action: DayAction | null;
+  /** True for the last record, taken when the journey ends. */
+  final?: boolean;
 }
 
 export interface NewGameConfig {
@@ -56,6 +74,8 @@ export interface NewGameConfig {
   seed?: number;
   /** Meta-progression unlocks (see meta.ts). */
   unlocks: { merchant: boolean; witch: boolean };
+  /** Marks the game as the daily challenge of this date (YYYY-MM-DD). */
+  daily?: string;
 }
 
 export type GameEvent =
@@ -159,6 +179,8 @@ export function createGame(config: NewGameConfig): GameState {
     counters: { saves: 0, retries: 0 },
     retryState: null,
     score: null,
+    history: [],
+    daily: config.daily ?? null,
   };
 
   // Starting effects: improvements first, then the faction. Stat modifiers are sorted
@@ -196,8 +218,15 @@ export function startNewDay(s: GameState, events: GameEvent[]): void {
   const income = dailyIncome(s);
   s.gold += income;
   s.phase = 'playing';
+  (s.history ??= []).push({ day: s.day, gold: s.gold, worth: computeScore(s).total, action: null });
   events.push({ type: 'newDay', day: s.day, income });
   openPendingEvent(s, events);
+}
+
+/** Remembers which action was played today (for the recap). */
+export function recordAction(s: GameState, action: DayAction): void {
+  const last = s.history?.[s.history.length - 1];
+  if (last && last.day === s.day && !last.final) last.action = action;
 }
 
 /** Opens the next event planned for today, if any. */
@@ -236,6 +265,7 @@ function pickDisaster(s: GameState): string {
 export function finishGame(s: GameState, events: GameEvent[]): void {
   s.gold += dailyIncome(s);
   s.score = computeScore(s);
+  (s.history ??= []).push({ day: s.day, gold: s.gold, worth: s.score.total, action: null, final: true });
   s.phase = 'victory';
   events.push({ type: 'victory', score: s.score });
 }
