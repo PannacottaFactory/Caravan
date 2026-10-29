@@ -10,6 +10,8 @@ export interface DailyTwist {
   id: string;
   /** Short title, e.g. "Silk boom". */
   title: string;
+  /** Very short label for small chips (the arrow icon shows boom or slump), e.g. "Silk". */
+  short: string;
   /** What it does, e.g. "Silk sells for 40% more". */
   description: string;
   kind: 'boom' | 'slump' | 'rule';
@@ -31,7 +33,7 @@ export const BOOM_PERCENT = 40;
 export const SLUMP_PERCENT = 30;
 
 /** Special rules: mild and always positive, so every day stays winnable. */
-const RULES: Omit<DailyTwist, 'kind'>[] = [
+const RULES: Omit<DailyTwist, 'kind' | 'short'>[] = [
   { id: 'kind-merchant', title: 'Kind merchant', description: 'Mysterious merchant prices are 30% lower', effects: [{ kind: 'stat', stat: 'merchantPricePct', op: 'add', value: -30 }] },
   { id: 'cheap-camels', title: 'Cheap camels', description: 'Camels cost 10 gold less', effects: [{ kind: 'stat', stat: 'camelCost', op: 'add', value: -10 }] },
   { id: 'eager-traders', title: 'Eager traders', description: 'Traders cost 10 gold less', effects: [{ kind: 'stat', stat: 'traderCost', op: 'add', value: -10 }] },
@@ -73,6 +75,7 @@ function pickTwists(date: string): DailyTwist[] {
     {
       id: `boom-${boomGood}`,
       title: `${name(boomGood)} boom`,
+      short: name(boomGood),
       description: `${name(boomGood)} sells for ${BOOM_PERCENT}% more`,
       kind: 'boom',
       effects: [{ kind: 'resourceStat', stat: 'sellPrice', resource: boomGood, op: 'mul', value: 1 + BOOM_PERCENT / 100 }],
@@ -80,11 +83,12 @@ function pickTwists(date: string): DailyTwist[] {
     {
       id: `slump-${slumpGood}`,
       title: `${name(slumpGood)} slump`,
+      short: name(slumpGood),
       description: `${name(slumpGood)} sells for ${SLUMP_PERCENT}% less`,
       kind: 'slump',
       effects: [{ kind: 'resourceStat', stat: 'sellPrice', resource: slumpGood, op: 'mul', value: 1 - SLUMP_PERCENT / 100 }],
     },
-    { ...rule, kind: 'rule' },
+    { ...rule, short: rule.title, kind: 'rule' },
   ];
 }
 

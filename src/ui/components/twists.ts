@@ -19,7 +19,7 @@ export function twistChips(twists: DailyTwist[], cls = ''): TemplateResult {
       const tip = withTip(`${KIND_LABEL[t.kind]} · ${t.title}`, EXPLAIN[t.kind](t));
       return html`<li class="twist twist--${t.kind}" tabindex="0" aria-label="${t.title}: ${t.description}"
         @pointerenter=${tip.show} @pointerleave=${tip.hide} @focus=${tip.show} @blur=${tip.hide}>
-        ${icon(TWIST_ICON[t.kind])}<span><strong>${t.title}</strong><small>${t.description}</small></span>
+        ${icon(TWIST_ICON[t.kind])}<span><strong>${cls.includes('twists--pills') ? t.short : t.title}</strong><small>${t.description}</small></span>
       </li>`;
     })}
   </ul>`;

@@ -617,18 +617,18 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 /* Bottom dock: two cards side by side, same height */
 .dock {
   width: 100%;
-  max-width: 1120px;
+  max-width: 900px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
 }
 .dock-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px 22px;
+  gap: 14px;
+  padding: 16px 18px;
   animation: rise 0.9s var(--ease) backwards 0.4s;
 }
 .dock-card__head {
@@ -642,6 +642,11 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   display: flex;
   gap: 6px;
 }
+.dock-card__links .btn {
+  --h: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+}
 
 /* Journey card */
 .progress-stats {
@@ -652,14 +657,14 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 .progress-stat {
   display: flex;
   flex-direction: column;
-  padding: 14px 16px;
+  padding: 10px 12px;
   border-radius: var(--r-sm);
   background: rgb(255 240 220 / 0.04);
   border: 1px solid var(--line);
 }
 .progress-stat strong {
   font-family: var(--font-display);
-  font-size: 1.9rem;
+  font-size: 1.6rem;
   font-weight: 600;
   line-height: 1.1;
   color: var(--gold);
@@ -781,14 +786,17 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 }
 /* Twists as small pills (details in the tooltip) */
 .twists.twists--pills {
+  display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 5px;
 }
 .twists--pills .twist {
-  padding: 4px 10px 4px 5px;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 3px 9px 3px 4px;
   border-radius: 99px;
-  gap: 6px;
+  gap: 5px;
 }
 .twists--pills .twist > .icon {
   width: 20px;
@@ -796,8 +804,14 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   padding: 3px;
   border-radius: 99px;
 }
+.twists--pills .twist span {
+  min-width: 0;
+}
 .twists--pills strong {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 600;
 }
 .twists--pills small {
