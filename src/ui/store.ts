@@ -25,6 +25,7 @@ import {
 } from '../engine';
 import { clearGame, loadGame, loadProfile, loadSettings, saveGame, saveProfile, saveSettings, type Settings } from '../storage/storage';
 import { playSfx, setMuted } from './audio';
+import { fetchTop, isValidPlayerName, submitScore, type LeaderboardEntry } from '../online/leaderboard';
 
 export type Screen = 'title' | 'factions' | 'prepare' | 'game';
 export type Tab = 'buy' | 'sell' | 'crew' | 'save';
@@ -34,6 +35,22 @@ export interface Toast {
   id: number;
   text: string;
   kind: 'error' | 'info' | 'success';
+}
+
+export interface OnlineBoard {
+  faction: string;
+  mode: Mode;
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  entries: LeaderboardEntry[];
+  error?: string;
+}
+
+export interface Submission {
+  /** Seed of the game this submission is about. */
+  seed: number | null;
+  status: 'idle' | 'sending' | 'done' | 'error';
+  rank?: number;
+  error?: string;
 }
 
 export interface AppState {
@@ -58,6 +75,10 @@ export interface AppState {
   dayBanner: number;
   /** Result of the last finished game (victory screen). */
   lastResult: RecordResult | null;
+  /** Online leaderboard */
+  recordsTab: 'local' | 'world';
+  board: OnlineBoard;
+  submission: Submission;
   toasts: Toast[];
 }
 
@@ -79,6 +100,9 @@ export const state: AppState = {
   witchChoice: 'presents-gift',
   dayBanner: 0,
   lastResult: null,
+  recordsTab: 'local',
+  board: { faction: FACTIONS[0]!.id, mode: 'classical', status: 'idle', entries: [] },
+  submission: { seed: null, status: 'idle' },
   toasts: [],
 };
 
@@ -348,5 +372,56 @@ export async function shareScore(): Promise<void> {
     toast('Score copied to the clipboard', 'success');
   } catch {
     // Share cancelled by the user.
+  }
+}
+
+// ------------------------------------------------------------------ online leaderboard
+
+export function openRecords(tab: 'local' | 'world', faction?: string, mode?: Mode): void {
+  update({ recordsTab: tab });
+  openModal('records');
+  if (tab === 'world') void loadBoard(faction ?? state.board.faction, mode ?? state.board.mode);
+}
+
+export function setRecordsTab(tab: 'local' | 'world'): void {
+  update({ recordsTab: tab });
+  if (tab === 'world' && state.board.status !== 'ready') void loadBoard(state.board.faction, state.board.mode);
+}
+
+let boardRequest = 0;
+
+export async function loadBoard(faction: string, mode: Mode): Promise<void> {
+  const id = ++boardRequest;
+  update({ board: { faction, mode, status: 'loading', entries: state.board.faction === faction && state.board.mode === mode ? state.board.entries : [] } });
+  try {
+    const entries = await fetchTop(faction, mode);
+    if (id === boardRequest) update({ board: { faction, mode, status: 'ready', entries } });
+  } catch (e) {
+    if (id === boardRequest) update({ board: { faction, mode, status: 'error', entries: [], error: (e as Error).message } });
+  }
+}
+
+export function setPlayerName(name: string): void {
+  const settings = { ...state.settings, playerName: name.trim() };
+  saveSettings(settings);
+  update({ settings });
+}
+
+export async function submitCurrentScore(name: string): Promise<void> {
+  const game = state.game;
+  if (!game?.score) return;
+  const player = name.trim();
+  if (!isValidPlayerName(player)) {
+    update({ submission: { seed: game.seed, status: 'error', error: '2 to 20 letters, digits, spaces, . _ -' } });
+    return;
+  }
+  setPlayerName(player);
+  update({ submission: { seed: game.seed, status: 'sending' } });
+  try {
+    const rank = await submitScore(game, player, state.settings.clientId);
+    playSfx('click');
+    update({ submission: { seed: game.seed, status: 'done', rank } });
+  } catch (e) {
+    update({ submission: { seed: game.seed, status: 'error', error: (e as Error).message } });
   }
 }

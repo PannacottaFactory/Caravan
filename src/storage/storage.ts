@@ -11,6 +11,19 @@ const KEYS = {
 
 export interface Settings {
   muted: boolean;
+  /** Name shown on the online leaderboard. */
+  playerName: string;
+  /** Random anonymous id of this browser, used by the online leaderboard. */
+  clientId: string;
+}
+
+function newClientId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  // Fallback for old browsers: RFC 4122 v4 from Math.random.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 function read<T>(key: string): T | null {
@@ -56,7 +69,10 @@ export const saveGame = (game: GameState): void => write(KEYS.game, game);
 export const clearGame = (): void => remove(KEYS.game);
 
 export function loadSettings(): Settings {
-  return { muted: false, ...read<Settings>(KEYS.settings) };
+  const saved = read<Partial<Settings>>(KEYS.settings) ?? {};
+  const settings: Settings = { muted: false, playerName: '', ...saved, clientId: saved.clientId || newClientId() };
+  if (!saved.clientId) write(KEYS.settings, settings);
+  return settings;
 }
 
 export const saveSettings = (settings: Settings): void => write(KEYS.settings, settings);

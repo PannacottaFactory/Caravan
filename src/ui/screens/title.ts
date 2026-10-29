@@ -3,7 +3,7 @@ import { ACHIEVEMENTS, FACTIONS, getFaction, isFactionUnlocked } from '../../eng
 import { fmt } from '../components/common';
 import { crest } from '../components/ui';
 import { brand, icon } from '../icons';
-import { continueGame, newGameFromTitle, openModal, state, toggleSound } from '../store';
+import { continueGame, newGameFromTitle, openModal, openRecords, state, toggleSound } from '../store';
 
 const SOCIALS = [
   { name: 'Twitter', icon: 'twitter', url: 'https://twitter.com/Victoriio' },
@@ -66,7 +66,7 @@ export function titleScreen(): TemplateResult {
             )}
           </div>
           <div class="hero__card-actions">
-            <button class="btn btn--secondary" @click=${() => openModal('records')}>${icon('podium')} Best scores</button>
+            <button class="btn btn--secondary" @click=${() => openRecords('local')}>${icon('podium')} Best scores</button>
             <button class="btn btn--secondary" @click=${() => openModal('achievements')}>${icon('trophy')} Achievements</button>
           </div>
         </aside>

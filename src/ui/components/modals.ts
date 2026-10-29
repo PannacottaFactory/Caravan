@@ -3,8 +3,8 @@ import { ACHIEVEMENTS, bestScore, FACTIONS, getMerchantItem, isFactionUnlocked }
 import { itemIcon } from '../assets';
 import { coinArt, icon, resourceArt } from '../icons';
 import { fmt, glyph } from './common';
-import { crest } from './ui';
-import { abandonGameAndChooseFaction, backToMenu, closeModal, state } from '../store';
+import { crest, segmented } from './ui';
+import { abandonGameAndChooseFaction, backToMenu, closeModal, loadBoard, setRecordsTab, state } from '../store';
 
 function modal(title: string, body: TemplateResult, actions?: TemplateResult, size: 'sm' | 'md' | 'lg' = 'md'): TemplateResult {
   const onBackdrop = (e: Event): void => {
@@ -51,22 +51,72 @@ const credits = () =>
 
 const score = (n: number): string => (n > 0 ? fmt(n) : '—');
 
+const localRecords = () => html`<div class="table-wrap"><table class="records">
+    <thead><tr><th>Faction</th><th>Classical</th><th>Traveler</th></tr></thead>
+    <tbody>
+      ${FACTIONS.map((f) => {
+        const open = isFactionUnlocked(state.profile, f.id);
+        return html`<tr class=${open ? '' : 'is-locked'}>
+          <td><span class="records__faction"><span class="crest-chip ${open ? '' : 'is-locked'}">${crest(f.id, 'crest--xs')}</span> ${f.name} ${open ? '' : icon('lock')}</span></td>
+          <td>${score(bestScore(state.profile, f.id, 'classical'))}</td>
+          <td>${score(bestScore(state.profile, f.id, 'traveler'))}</td>
+        </tr>`;
+      })}
+    </tbody>
+  </table></div>`;
+
+const worldRecords = () => {
+  const b = state.board;
+  const onFaction = (e: Event): void => void loadBoard((e.target as HTMLSelectElement).value, b.mode);
+  return html`<div class="world">
+    <div class="world__controls">
+      <label class="select">
+        <span class="crest-chip">${crest(b.faction, 'crest--xs')}</span>
+        <select @change=${onFaction} aria-label="Faction">
+          ${FACTIONS.map((f) => html`<option value=${f.id} ?selected=${f.id === b.faction}>${f.name}</option>`)}
+        </select>
+        ${icon('chevronRight', 'select__chevron')}
+      </label>
+      ${segmented(
+        [
+          { id: 'classical', label: 'Classical' },
+          { id: 'traveler', label: 'Traveler' },
+        ],
+        b.mode,
+        (mode) => void loadBoard(b.faction, mode),
+      )}
+    </div>
+    ${b.status === 'error'
+      ? html`<div class="world__empty">${icon('warning')}<p>${b.error}</p>
+          <button class="btn btn--secondary btn--sm" @click=${() => void loadBoard(b.faction, b.mode)}>${icon('refresh')} Retry</button></div>`
+      : b.status === 'ready' && b.entries.length === 0
+        ? html`<div class="world__empty">${icon('podium')}<p>No score yet for this faction and mode. Be the first!</p></div>`
+        : html`<ol class="world__list ${b.status === 'loading' ? 'is-loading' : ''}">
+            ${b.entries.map(
+              (e, i) => html`<li class=${e.client_id === state.settings.clientId ? 'is-me' : ''} style="--d:${i}">
+                <span class="world__rank rank-${i + 1}">${i + 1}</span>
+                <span class="world__player">${e.player}${e.client_id === state.settings.clientId ? html` <small>(you)</small>` : nothing}</span>
+                <span class="world__date">${new Date(e.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                <strong>${fmt(e.score)}</strong>
+              </li>`,
+            )}
+            ${b.status === 'loading' && b.entries.length === 0 ? Array.from({ length: 6 }, () => html`<li class="skeleton"></li>`) : nothing}
+          </ol>`}
+  </div>`;
+};
+
 const records = () =>
   modal(
     'Best scores',
-    html`<div class="table-wrap"><table class="records">
-      <thead><tr><th>Faction</th><th>Classical</th><th>Traveler</th></tr></thead>
-      <tbody>
-        ${FACTIONS.map((f) => {
-          const open = isFactionUnlocked(state.profile, f.id);
-          return html`<tr class=${open ? '' : 'is-locked'}>
-            <td><span class="records__faction"><span class="crest-chip ${open ? '' : 'is-locked'}">${crest(f.id, 'crest--xs')}</span> ${f.name} ${open ? '' : icon('lock')}</span></td>
-            <td>${score(bestScore(state.profile, f.id, 'classical'))}</td>
-            <td>${score(bestScore(state.profile, f.id, 'traveler'))}</td>
-          </tr>`;
-        })}
-      </tbody>
-    </table></div>`,
+    html`${segmented(
+        [
+          { id: 'local', label: 'My records', icon: 'trophy' },
+          { id: 'world', label: 'World', icon: 'podium' },
+        ],
+        state.recordsTab,
+        setRecordsTab,
+      )}
+      ${state.recordsTab === 'local' ? localRecords() : worldRecords()}`,
     undefined,
     'lg',
   );

@@ -16,7 +16,7 @@ import { img, itemIcon, powerIcon } from '../assets';
 import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
 import { fmt, glyph, num } from './common';
 import { crest } from './ui';
-import { backToMenu, dispatch, retryDay, shareScore, startGame, state, update } from '../store';
+import { backToMenu, dispatch, openRecords, retryDay, shareScore, startGame, state, submitCurrentScore, update } from '../store';
 
 function dialog(kind: string, content: TemplateResult): TemplateResult {
   return html`<div class="overlay overlay--${kind}" role="dialog" aria-modal="true">
@@ -212,6 +212,7 @@ function victory(g: GameState): TemplateResult {
                 ${r.newAchievements.map((id) => html`<span class="unlock-chip unlock-chip--gold">${icon('trophy')} ${ACHIEVEMENTS.find((x) => x.id === id)?.name ?? id}</span>`)}
               </div>`
             : nothing}
+          ${onlineSubmit(g)}
           <footer class="dialog__actions">
             <button class="btn btn--ghost btn--lg" @click=${backToMenu}>Menu</button>
             <button class="btn btn--secondary btn--lg" @click=${shareScore}>${icon('share')} Share</button>
@@ -221,6 +222,36 @@ function victory(g: GameState): TemplateResult {
       </div>
     `,
   );
+}
+
+function onlineSubmit(g: GameState): TemplateResult {
+  const sub = state.submission.seed === g.seed ? state.submission : { status: 'idle' as const, rank: undefined, error: undefined };
+  const board = `${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}`;
+  if (sub.status === 'done') {
+    return html`<div class="online online--done">
+      <span class="online__icon">${icon('podium')}</span>
+      <span>You are <strong>#${sub.rank}</strong> on the ${board} leaderboard</span>
+      <button class="btn btn--ghost btn--sm" @click=${() => openRecords('world', g.factionId, g.mode)}>View</button>
+    </div>`;
+  }
+  const sending = sub.status === 'sending';
+  const onSubmit = (e: Event): void => {
+    e.preventDefault();
+    const input = (e.currentTarget as HTMLFormElement).elements.namedItem('player') as HTMLInputElement;
+    void submitCurrentScore(input.value);
+  };
+  return html`<form class="online" @submit=${onSubmit}>
+    <span class="online__icon">${icon('podium')}</span>
+    <div class="online__body">
+      <label for="player-name">Online leaderboard · ${board}</label>
+      <div class="online__row">
+        <input id="player-name" name="player" class="input" maxlength="20" autocomplete="nickname" placeholder="Your name"
+          .value=${state.settings.playerName} ?disabled=${sending} />
+        <button class="btn btn--secondary" type="submit" ?disabled=${sending}>${sending ? 'Sending…' : 'Submit score'}</button>
+      </div>
+      ${sub.status === 'error' ? html`<p class="online__error">${sub.error}</p>` : nothing}
+    </div>
+  </form>`;
 }
 
 // ------------------------------------------------------------------
