@@ -9,6 +9,7 @@ import {
   getFaction,
   getMerchantItem,
   merchantArrivesTomorrow,
+  MODES,
   previewBuy,
   previewSell,
   RESOURCE_IDS,
@@ -29,6 +30,20 @@ import { soundToggle } from './title';
 
 // ------------------------------------------------------------------ header: journey timeline
 
+/** Traveler mode: red zone on the timeline over the days a disaster can strike. */
+function dangerZone(g: GameState): TemplateResult | typeof nothing {
+  const range = MODES[g.mode].disasterDays;
+  if (!range || g.maxDay <= 1) return nothing;
+  const pos = (d: number) => Math.min(1, Math.max(0, (d - 1) / (g.maxDay - 1)));
+  const from = pos(range[0]);
+  const to = pos(range[1]);
+  const done = g.events.disaster.done;
+  return html`<span class="timeline__danger ${done ? 'is-done' : ''}" style="--from:${from};--to:${to}"
+    title=${done ? 'The disaster has passed' : `Danger zone: a disaster will strike between day ${range[0]} and ${range[1]}`}>
+    ${icon('skull')}
+  </span>`;
+}
+
 function timeline(g: GameState): TemplateResult {
   const days = Array.from({ length: g.maxDay }, (_, i) => i + 1);
   const progress = g.maxDay > 1 ? (g.day - 1) / (g.maxDay - 1) : 1;
@@ -39,6 +54,7 @@ function timeline(g: GameState): TemplateResult {
     </div>
     <div class="timeline__track">
       <div class="timeline__fill"></div>
+      ${dangerZone(g)}
       ${days.map(
         (d) => html`<span class="timeline__dot ${d < g.day ? 'is-past' : ''} ${d === g.day ? 'is-today' : ''}
           ${warn && d === g.day + 1 ? 'is-merchant' : ''}" title=${warn && d === g.day + 1 ? 'A strange merchant is coming…' : `Day ${d}`}></span>`,
@@ -87,7 +103,9 @@ function sidebar(g: GameState, stats: Stats): TemplateResult {
         <span class="stat__delta ${danger ? 'stat__delta--bad' : ''}">
           ${lastDay
             ? 'No food needed today'
-            : `−${eat} per day · ${danger ? 'not enough for tonight!' : Number.isFinite(daysLeft) ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : 'no need'}`}
+            : eat === 0
+              ? 'Your crew eats nothing'
+              : `−${eat} per day · ${danger ? 'not enough for tonight!' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}`}
         </span>
       </div>
     </div>
@@ -284,13 +302,15 @@ export function gameScreen(): TemplateResult {
   };
 
   return html`
-    <section class="screen game-screen">
+    <section class="screen game-screen ${g.mode === 'traveler' ? 'is-traveler' : ''}">
       <header class="game-header">
         <div class="game-header__left">
           ${iconButton('menu', 'Menu', () => openModal('menu'))}
           <div class="game-header__faction">
             ${crest(g.factionId, 'crest--sm')}
-            <span><strong>${faction.name}</strong><small>${g.mode === 'classical' ? 'Classical' : 'Traveler'}</small></span>
+            <span><strong>${faction.name}</strong>${g.mode === 'classical'
+              ? html`<small>Classical</small>`
+              : html`<small class="danger-badge">${icon('skull')} Traveler · Disasters</small>`}</span>
           </div>
         </div>
         ${timeline(g)}

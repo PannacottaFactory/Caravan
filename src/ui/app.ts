@@ -29,7 +29,7 @@ const TOAST_ICON = { error: 'warning', info: 'info', success: 'trophy' } as cons
 function view() {
   return html`
     ${artDefs()}
-    ${scene(state.screen === 'title' ? 'hero' : 'game')}
+    ${scene(state.screen === 'title' ? 'hero' : 'game', state.screen === 'game' && state.game?.mode === 'traveler')}
     <main class="app app--${state.screen}">${keyed(state.screen, currentScreen())}</main>
     ${modalLayer()}
     ${import.meta.env.DEV ? devPanel() : nothing}

@@ -71,9 +71,9 @@ const caravanSilhouette = (): TemplateResult => html`
     <span class="caravan__walker">${traderArt()}</span>
   </div>`;
 
-export function scene(mode: 'hero' | 'game'): TemplateResult {
+export function scene(mode: 'hero' | 'game', danger = false): TemplateResult {
   return html`
-    <div class="scene scene--${mode}" aria-hidden="true">
+    <div class="scene scene--${mode} ${danger ? 'scene--danger' : ''}" aria-hidden="true">
       <div class="scene__sky"></div>
       <svg class="scene__stars" viewBox="0 0 1600 340" preserveAspectRatio="xMidYMin slice" fill="#fff6e0">${STARS}</svg>
       <div class="scene__sun"></div>
