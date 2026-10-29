@@ -1,5 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit-html';
-import { ACHIEVEMENTS, dailyChallenge, dateKey, FACTIONS, getFaction, isFactionUnlocked, msUntilNextDaily } from '../../engine';
+import { ACHIEVEMENTS, bestScore, dailyChallenge, dateKey, FACTIONS, getFaction, isFactionUnlocked, msUntilNextDaily } from '../../engine';
 import { fmt, formatDay, formatDuration } from '../components/common';
 import { crest } from '../components/ui';
 import { twistChips } from '../components/twists';
@@ -17,30 +17,77 @@ export function soundToggle(): TemplateResult {
     title=${muted ? 'Sound off' : 'Sound on'}>${icon(muted ? 'soundOff' : 'soundOn')}</button>`;
 }
 
+/** Progress card: best score, factions, achievements, crests. */
+function journeyCard(): TemplateResult {
+  const p = state.profile;
+  const unlocked = FACTIONS.filter((f) => isFactionUnlocked(p, f.id)).length;
+  const best = Math.max(0, ...Object.values(p.bestScores).flatMap((s) => [s.classical, s.traveler]));
+  return html`<section class="card dock-card journey-card" aria-label="Your journey">
+    <header class="dock-card__head">
+      <h2 class="card__title">Your journey</h2>
+      <div class="dock-card__links">
+        <button class="btn btn--ghost btn--sm" @click=${() => openRecords('local')}>${icon('podium')} Best scores</button>
+        <button class="btn btn--ghost btn--sm" @click=${() => openModal('achievements')}>${icon('trophy')} Achievements</button>
+      </div>
+    </header>
+    <div class="progress-stats">
+      <div class="progress-stat"><strong>${fmt(best)}</strong><span>Best score</span></div>
+      <div class="progress-stat"><strong>${unlocked}<small>/${FACTIONS.length}</small></strong><span>Factions</span></div>
+      <div class="progress-stat"><strong>${p.achievements.length}<small>/${ACHIEVEMENTS.length}</small></strong><span>Achievements</span></div>
+    </div>
+    <div class="crest-line" aria-label="${unlocked} factions unlocked">
+      ${FACTIONS.map(
+        (f) => html`<span class="crest-chip ${isFactionUnlocked(p, f.id) ? '' : 'is-locked'}" title=${f.name}>${crest(f.id, 'crest--mini')}</span>`,
+      )}
+    </div>
+    ${nextUnlock()}
+  </section>`;
+}
+
+/** Progress towards the next locked faction. */
+function nextUnlock(): TemplateResult {
+  const p = state.profile;
+  const index = FACTIONS.findIndex((f) => !isFactionUnlocked(p, f.id));
+  if (index <= 0) return html`<p class="next-unlock next-unlock--done">${icon('crown')} Every faction is unlocked. Well done, trader!</p>`;
+  const next = FACTIONS[index]!;
+  const prev = FACTIONS[index - 1]!;
+  const goal = prev.unlockNextScore ?? 0;
+  const have = bestScore(p, prev.id, 'classical');
+  const ratio = goal > 0 ? Math.min(1, have / goal) : 0;
+  return html`<div class="next-unlock">
+    <div class="next-unlock__text">
+      <span>Next faction <strong>${next.name}</strong></span>
+      <span class="muted">${fmt(have)} / ${fmt(goal)} with ${prev.name}</span>
+    </div>
+    <div class="meter"><i style="transform:scaleX(${ratio})"></i></div>
+  </div>`;
+}
+
+/** Daily challenge card: deliberately quieter than the journey card. */
 function dailyCard(): TemplateResult {
   const c = dailyChallenge(dateKey());
   const status = dailyStatus();
   const done = state.profile.daily?.date === c.date ? state.profile.daily : null;
-  return html`<section class="card daily-card ${status === 'done' ? 'is-done' : ''}" aria-label="Daily challenge">
-    <div class="daily-card__head">
+  return html`<section class="card dock-card daily-card ${status === 'done' ? 'is-done' : ''}" aria-label="Daily challenge">
+    <header class="dock-card__head">
       <span class="daily-card__eyebrow">${icon('sun')} Daily challenge · ${formatDay(c.date)}</span>
       <span class="daily-card__timer" title="Time before the next challenge">New in ${formatDuration(msUntilNextDaily())}</span>
-    </div>
+    </header>
     <div class="daily-card__body">
       ${crest(c.factionId, 'crest--md')}
       <div>
         <strong>${getFaction(c.factionId).name}</strong>
-        <span class="muted small">Classical · same journey for everyone · one try</span>
+        <span class="muted small">Same journey for everyone · one try</span>
       </div>
     </div>
-    ${twistChips(c.twists, 'twists--row twists--compact')}
+    ${twistChips(c.twists, 'twists--pills')}
     ${done
       ? html`<div class="daily-card__done">
           <span>Your score <strong>${fmt(done.score)}</strong></span>
-          <button class="btn btn--secondary btn--sm" @click=${() => openRecords('daily')}>${icon('podium')} Ranking</button>
+          <button class="btn btn--ghost btn--sm" @click=${() => openRecords('daily')}>${icon('podium')} Ranking</button>
         </div>`
       : html`<div class="daily-card__actions">
-          <button class="btn btn--secondary btn--lg" @click=${playDaily}>${icon('play')} ${status === 'inProgress' ? 'Continue the challenge' : "Play today's challenge"}</button>
+          <button class="btn btn--secondary" @click=${playDaily}>${icon('play')} ${status === 'inProgress' ? 'Continue the challenge' : "Play today's challenge"}</button>
           <button class="icon-btn" @click=${() => openRecords('daily')} aria-label="Today's ranking" title="Today's ranking">${icon('podium')}</button>
         </div>`}
   </section>`;
@@ -49,8 +96,6 @@ function dailyCard(): TemplateResult {
 export function titleScreen(): TemplateResult {
   const saved = state.game && state.game.phase !== 'victory' ? state.game : null;
   const p = state.profile;
-  const unlocked = FACTIONS.filter((f) => isFactionUnlocked(p, f.id)).length;
-  const best = Math.max(0, ...Object.values(p.bestScores).flatMap((s) => [s.classical, s.traveler]));
 
   return html`
     <section class="screen title-screen">
@@ -66,44 +111,22 @@ export function titleScreen(): TemplateResult {
       </header>
 
       <div class="hero">
-        <div class="hero__copy">
-          <p class="hero__eyebrow">A desert trading game</p>
-          <h1 class="hero__title">Caravan</h1>
-          <p class="hero__tagline">Buy, sell, profit.<br />Lead your caravan across the dunes and become the richest trader of your faction.</p>
-
-          <div class="hero__actions">
-            ${saved
-              ? html`<button class="btn btn--primary btn--xl" @click=${continueGame}>
-                    ${icon('play')} Continue journey
-                    <span class="btn__meta">${getFaction(saved.factionId).name} · Day ${saved.day}/${saved.maxDay}</span>
-                  </button>
-                  <button class="btn btn--secondary btn--lg" @click=${newGameFromTitle}>New journey</button>`
-              : html`<button class="btn btn--primary btn--xl" @click=${newGameFromTitle}>${icon('play')} Play</button>`}
-            <button class="btn btn--ghost btn--lg" @click=${() => openModal('howto')}>${icon('help')} How to play</button>
-          </div>
-        </div>
-
-        <div class="hero__side">
-        <aside class="hero__card card" aria-label="Your progress">
-          <h2 class="card__title">Your journey</h2>
-          <div class="progress-stats">
-            <div class="progress-stat"><strong>${fmt(best)}</strong><span>Best score</span></div>
-            <div class="progress-stat"><strong>${unlocked}<small>/${FACTIONS.length}</small></strong><span>Factions</span></div>
-            <div class="progress-stat"><strong>${p.achievements.length}<small>/${ACHIEVEMENTS.length}</small></strong><span>Achievements</span></div>
-          </div>
-          <div class="crest-row">
-            ${FACTIONS.map(
-              (f) => html`<span class="crest-chip ${isFactionUnlocked(p, f.id) ? '' : 'is-locked'}" title=${f.name}>${crest(f.id, 'crest--mini')}</span>`,
-            )}
-          </div>
-          <div class="hero__card-actions">
-            <button class="btn btn--secondary" @click=${() => openRecords('local')}>${icon('podium')} Best scores</button>
-            <button class="btn btn--secondary" @click=${() => openModal('achievements')}>${icon('trophy')} Achievements</button>
-          </div>
-        </aside>
-        ${dailyCard()}
+        <p class="hero__eyebrow">A desert trading game</p>
+        <h1 class="hero__title">Caravan</h1>
+        <p class="hero__tagline">Buy, sell, profit. Lead your caravan across the dunes and become the richest trader of your faction.</p>
+        <div class="hero__actions">
+          ${saved
+            ? html`<button class="btn btn--primary btn--xl" @click=${continueGame}>
+                  ${icon('play')} Continue journey
+                  <span class="btn__meta">${getFaction(saved.factionId).name} · Day ${saved.day}/${saved.maxDay}</span>
+                </button>
+                <button class="btn btn--secondary btn--lg" @click=${newGameFromTitle}>New journey</button>`
+            : html`<button class="btn btn--primary btn--xl" @click=${newGameFromTitle}>${icon('play')} Play</button>`}
+          <button class="btn btn--ghost btn--lg" @click=${() => openModal('howto')}>${icon('help')} How to play</button>
         </div>
       </div>
+
+      <div class="dock">${journeyCard()} ${dailyCard()}</div>
 
       <footer class="title-footer">
         <span>Made by Pannacotta · Music by Tyler Cline</span>

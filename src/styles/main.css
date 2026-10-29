@@ -392,6 +392,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   position: absolute;
   left: 60%;
   bottom: 34vh;
+  transition: left 0.8s var(--ease), bottom 0.8s var(--ease);
   width: 30vmin;
   height: 30vmin;
   margin-left: -15vmin;
@@ -445,6 +446,11 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgb(10 6 8 / 0.15), rgb(10 6 8 / 0.05) 50%, rgb(10 6 8 / 0.35));
+}
+/* Title screen: the sun sets on the right, away from the centered title and buttons. */
+.scene--hero .scene__sun {
+  left: 84%;
+  bottom: 46vh;
 }
 .scene--game .scene__shade {
   background: rgb(12 8 8 / 0.62);
@@ -548,7 +554,8 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 
 .title-screen {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 18px;
 }
 .title-header {
   display: flex;
@@ -558,15 +565,15 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   display: flex;
   gap: 4px;
 }
+
+/* Centered hero */
 .hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 500px);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 48px;
-  padding-bottom: 8vh;
-}
-.hero__copy {
-  max-width: 620px;
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 2vh;
 }
 .hero__eyebrow {
   animation: rise 0.8s var(--ease) backwards 0.05s;
@@ -574,16 +581,16 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 .hero__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(4.5rem, 10vw, 9rem);
+  font-size: clamp(5rem, 11vw, 10rem);
   line-height: 0.95;
   letter-spacing: -0.02em;
-  margin: 10px 0 18px;
+  margin: 8px 0 16px;
   background: linear-gradient(180deg, #fff6e2 10%, #ffd27f 60%, #f19b3d 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   animation: rise 0.9s var(--ease) backwards 0.12s, title-float 7s ease-in-out 1s infinite alternate;
-  transform-origin: 30% 60%;
+  transform-origin: 50% 60%;
 }
 @keyframes title-float {
   from { transform: translateY(0) rotate(0deg); }
@@ -592,73 +599,211 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 .hero__tagline {
   font-size: 1.15rem;
   color: var(--text-2);
-  max-width: 460px;
+  max-width: 560px;
   animation: rise 0.9s var(--ease) backwards 0.22s;
 }
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
-  margin-top: 34px;
+  margin-top: 30px;
   animation: rise 0.9s var(--ease) backwards 0.32s;
 }
 @keyframes rise {
   from { opacity: 0; transform: translateY(18px); }
 }
-.hero__card {
-  padding: 32px;
+
+/* Bottom dock: two cards side by side, same height */
+.dock {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.dock-card {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  padding: 20px 22px;
   animation: rise 0.9s var(--ease) backwards 0.4s;
 }
+.dock-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+}
+.dock-card__links {
+  display: flex;
+  gap: 6px;
+}
+
+/* Journey card */
 .progress-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.hero__card .card__title {
-  font-size: 1.6rem;
+  gap: 10px;
 }
 .progress-stat {
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: var(--r-sm);
   background: rgb(255 240 220 / 0.04);
   border: 1px solid var(--line);
 }
 .progress-stat strong {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 600;
+  line-height: 1.1;
   color: var(--gold);
 }
 .progress-stat small {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-3);
 }
 .progress-stat span {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-3);
 }
-.crest-row {
+.crest-line {
+  display: grid;
+  grid-template-columns: repeat(22, minmax(0, 1fr));
+  gap: 4px;
+}
+.crest-line .crest-chip,
+.crest-line .crest--mini {
+  width: 100%;
+  height: auto;
+}
+
+.next-unlock {
+  margin-top: auto;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
+}
+.next-unlock__text {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+.next-unlock__text strong {
+  color: var(--gold);
+}
+.next-unlock--done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold);
+  font-weight: 600;
+}
+.next-unlock--done .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Daily card: quieter than the journey card */
+.daily-card {
+  background: rgb(30 22 19 / 0.8);
+  box-shadow: none;
+  animation-delay: 0.5s;
+}
+.daily-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.daily-card__eyebrow .icon {
+  width: 16px;
+  height: 16px;
+}
+.daily-card__timer {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.daily-card__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.daily-card__body > div {
+  display: flex;
+  flex-direction: column;
+}
+.daily-card__body strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.15;
+}
+.crest--md {
+  width: 40px;
+  height: 46px;
+}
+.daily-card__actions {
+  margin-top: auto;
+  display: flex;
   gap: 8px;
 }
-.crest-row .crest--mini {
-  width: 32px;
-  height: 36px;
+.daily-card__actions .btn {
+  flex: 1;
 }
-.hero__card-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.daily-card__done {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 12px;
+  background: var(--green-soft);
+  color: var(--text-2);
 }
-.hero__card-actions .btn {
-  --h: 50px;
+.daily-card__done strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--green);
+  margin-left: 4px;
 }
+/* Twists as small pills (details in the tooltip) */
+.twists.twists--pills {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.twists--pills .twist {
+  padding: 4px 10px 4px 5px;
+  border-radius: 99px;
+  gap: 6px;
+}
+.twists--pills .twist > .icon {
+  width: 20px;
+  height: 20px;
+  padding: 3px;
+  border-radius: 99px;
+}
+.twists--pills strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.twists--pills small {
+  display: none;
+}
+
 .title-footer {
   display: flex;
   gap: 18px;
@@ -2485,95 +2630,7 @@ a.btn {
   transition: background 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease), transform 0.35s var(--spring);
 }
 
-/* Daily challenge */
-.hero__side {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.daily-card {
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgb(30 22 19 / 0.82);
-  box-shadow: none;
-  animation: rise 0.9s var(--ease) backwards 0.5s;
-}
-.daily-card .daily-card__body strong {
-  font-size: 1.3rem;
-}
-.daily-card__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-.daily-card__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.daily-card__eyebrow .icon {
-  width: 16px;
-  height: 16px;
-}
-.daily-card__timer {
-  font-size: 0.8rem;
-  color: var(--text-3);
-  font-variant-numeric: tabular-nums;
-}
-.daily-card__body {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.daily-card__body > div {
-  display: flex;
-  flex-direction: column;
-}
-.daily-card__body strong {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 650;
-  line-height: 1.1;
-}
-.crest--md {
-  width: 46px;
-  height: 52px;
-}
-.daily-card__actions {
-  display: flex;
-  gap: 10px;
-}
-.daily-card__actions .btn {
-  flex: 1;
-}
-.daily-card__actions .icon-btn {
-  width: 50px;
-  height: 50px;
-}
-.daily-card__done {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--green-soft);
-  color: var(--text-2);
-}
-.daily-card__done strong {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--green);
-  margin-left: 4px;
-}
+/* Daily challenge (records & game) */
 .daily-head {
   display: flex;
   align-items: center;
@@ -3237,9 +3294,6 @@ a.btn {
   .game-header {
     grid-template-columns: auto minmax(240px, 1fr) auto;
   }
-  .hero {
-    grid-template-columns: minmax(0, 1fr) 400px;
-  }
 }
 
 @media (max-height: 760px) and (min-width: 901px) {
@@ -3275,7 +3329,7 @@ a.btn {
     min-height: 100dvh;
     padding: 14px;
   }
-  .hero,
+  .dock,
   .faction-layout,
   .prepare-layout {
     grid-template-columns: 1fr;
