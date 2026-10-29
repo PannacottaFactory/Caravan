@@ -161,7 +161,7 @@ function marketFooter(kind: 'buy' | 'sell', g: GameState, stats: Stats): Templat
     return actionBar(
       html`${change('Gold', g.gold, g.gold - p.cost, p.error === 'notEnoughGold')}
         ${change('Cargo', weight, weight + p.weight, p.error === 'notEnoughCapacity', ` / ${fmt(cap)}`)}`,
-      empty ? 'Select goods to buy' : p.error ? ERROR_MESSAGES[p.error] : null,
+      empty ? { text: 'Select goods to buy', error: false } : p.error ? { text: ERROR_MESSAGES[p.error], error: true } : null,
       html`${icon('cart')} Buy`,
       !p.error,
       () => dispatch({ type: 'buy', quantities: state.buyDraft }),
@@ -172,7 +172,7 @@ function marketFooter(kind: 'buy' | 'sell', g: GameState, stats: Stats): Templat
   return actionBar(
     html`${change('Gold', g.gold, g.gold + p.earnings, false)} ${change('Cargo', weight, weight - p.weight, false, ` / ${fmt(cap)}`)}
       ${stats.global.sellBonus ? html`<span class="bonus-chip">${glyph(itemIcon('hand-of-midas'))} +${stats.global.sellBonus} Midas</span>` : nothing}`,
-    empty ? 'Select goods to sell' : p.error ? ERROR_MESSAGES[p.error] : null,
+    empty ? { text: 'Select goods to sell', error: false } : p.error ? { text: ERROR_MESSAGES[p.error], error: true } : null,
     html`${icon('coins')} Sell`,
     !p.error,
     () => dispatch({ type: 'sell', quantities: state.sellDraft }),
@@ -187,11 +187,17 @@ function change(label: string, from: number, to: number, bad: boolean, suffix = 
   </span>`;
 }
 
-function actionBar(summary: TemplateResult, message: string | null, label: TemplateResult, enabled: boolean, onClick: () => void): TemplateResult {
+function actionBar(
+  summary: TemplateResult,
+  message: { text: string; error: boolean } | null,
+  label: TemplateResult,
+  enabled: boolean,
+  onClick: () => void,
+): TemplateResult {
   return html`<footer class="action-bar">
     <div class="action-bar__summary">${summary}</div>
     <div class="action-bar__cta">
-      ${message ? html`<span class="action-bar__msg">${message}</span>` : html`<span class="action-bar__msg action-bar__msg--ok">Ends the day</span>`}
+      <span class="action-bar__msg ${message?.error ? '' : 'action-bar__msg--ok'}">${message?.text ?? 'Ends the day'}</span>
       <button class="btn btn--primary btn--lg" ?disabled=${!enabled} @click=${onClick}>${label}</button>
     </div>
   </footer>`;
