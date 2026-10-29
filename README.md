@@ -28,3 +28,7 @@ npm run build      # production build in dist/
 
 Pushing to `main` builds and deploys to GitHub Pages (`.github/workflows/deploy.yml`).
 In the repository settings, set **Pages → Source** to **GitHub Actions**.
+
+## License
+
+All rights reserved — see [LICENSE](LICENSE). Viewing only; no copying or reuse without permission.

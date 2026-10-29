@@ -11,14 +11,15 @@ Réponses aux questions de [portage.md](portage.md) §4 (validées le 2026-10-29
 | Bugs B1-B18 | **Tous corrigés** ; l'équilibrage sera revu plus tard |
 | Mehaz / Ipartus | Débloquées par score : Sanctifan ≥ **12 000** → Mehaz ; Mehaz ≥ **15 000** → Ipartus |
 | « Continuer » après défaite | Gratuit et **illimité** (rejoue le jour de la défaite) |
-| Classement | Première version en ligne (backend à choisir, GitHub Pages étant statique) |
+| Classement | En ligne **reporté** à la fin du projet (backend à choisir, GitHub Pages étant statique) |
 | Langue | Anglais uniquement |
 | Droits (musique, polices, sprites) | OK |
 | Hébergement | GitHub Pages |
 | UI | TypeScript sans framework |
 | Format | Mise en page **paysage** dédiée (desktop), en plus du portrait mobile |
 | Texte « alpha version » | Supprimé |
-| Dépôt | `caravan-web/`, séparé du projet Unity |
+| Dépôt | `caravan-web/`, séparé du projet Unity ; public sur https://github.com/PannacottaFactory/Caravan |
+| Licence | Aucune licence open source : « All rights reserved » (fichier `LICENSE`), musique de Tyler Cline mentionnée à part |
 
 ## Seuils de Mehaz et Ipartus
 
