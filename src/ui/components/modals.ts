@@ -1,10 +1,22 @@
 import { html, nothing, type TemplateResult } from 'lit-html';
-import { ACHIEVEMENTS, bestScore, FACTIONS, getMerchantItem, isFactionUnlocked } from '../../engine';
+import { ACHIEVEMENTS, bestScore, dailyChallenge, dateKey, FACTIONS, getFaction, getMerchantItem, isFactionUnlocked } from '../../engine';
 import { itemArt } from '../art';
 import { coinArt, icon, resourceArt } from '../icons';
-import { fmt } from './common';
+import { fmt, formatDay } from './common';
 import { crest, segmented } from './ui';
-import { abandonGameAndChooseFaction, backToMenu, closeModal, loadBoard, setRecordsTab, state } from '../store';
+import {
+  abandonGameAndChooseFaction,
+  backToMenu,
+  canShareImage,
+  closeModal,
+  copyShareText,
+  loadBoard,
+  loadDailyBoard,
+  setRecordsTab,
+  shareImage,
+  startDaily,
+  state,
+} from '../store';
 
 function modal(title: string, body: TemplateResult, actions?: TemplateResult, size: 'sm' | 'md' | 'lg' = 'md'): TemplateResult {
   const onBackdrop = (e: Event): void => {
@@ -105,6 +117,36 @@ const worldRecords = () => {
   </div>`;
 };
 
+const dailyRecords = () => {
+  const c = dailyChallenge(dateKey());
+  const b = state.dailyBoard;
+  return html`<div class="world">
+    <div class="daily-head">
+      ${crest(c.factionId, 'crest--sm')}
+      <div>
+        <strong>Daily challenge · ${formatDay(c.date)}</strong>
+        <span class="muted small">${getFaction(c.factionId).name} · Classical · same journey for everyone</span>
+      </div>
+    </div>
+    ${b.status === 'error'
+      ? html`<div class="world__empty">${icon('warning')}<p>${b.error}</p>
+          <button class="btn btn--secondary btn--sm" @click=${() => void loadDailyBoard()}>${icon('refresh')} Retry</button></div>`
+      : b.status === 'ready' && b.entries.length === 0
+        ? html`<div class="world__empty">${icon('podium')}<p>Nobody has finished today's challenge yet. Be the first!</p></div>`
+        : html`<ol class="world__list ${b.status === 'loading' ? 'is-loading' : ''}">
+            ${b.entries.map(
+              (e, i) => html`<li class=${e.client_id === state.settings.clientId ? 'is-me' : ''} style="--d:${i}">
+                <span class="world__rank rank-${i + 1}">${i + 1}</span>
+                <span class="world__player">${e.player}${e.client_id === state.settings.clientId ? html` <small>(you)</small>` : nothing}</span>
+                <span class="world__date">${new Date(e.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                <strong>${fmt(e.score)}</strong>
+              </li>`,
+            )}
+            ${b.status === 'loading' && b.entries.length === 0 ? Array.from({ length: 6 }, () => html`<li class="skeleton"></li>`) : nothing}
+          </ol>`}
+  </div>`;
+};
+
 const records = () =>
   modal(
     'Best scores',
@@ -112,11 +154,12 @@ const records = () =>
         [
           { id: 'local', label: 'My records', icon: 'trophy' },
           { id: 'world', label: 'World', icon: 'podium' },
+          { id: 'daily', label: 'Today', icon: 'sun' },
         ],
         state.recordsTab,
         setRecordsTab,
       )}
-      ${state.recordsTab === 'local' ? localRecords() : worldRecords()}`,
+      ${state.recordsTab === 'local' ? localRecords() : state.recordsTab === 'world' ? worldRecords() : dailyRecords()}`,
     undefined,
     'lg',
   );
@@ -156,6 +199,33 @@ const newGame = () =>
     'sm',
   );
 
+const newDaily = () =>
+  modal(
+    "Play today's challenge?",
+    html`<p>A journey is in progress. Playing the daily challenge will abandon it.</p>`,
+    html`<button class="btn btn--ghost btn--lg" @click=${closeModal}>Cancel</button>
+      <button class="btn btn--danger btn--lg" @click=${startDaily}>Abandon and play</button>`,
+    'sm',
+  );
+
+const share = () => {
+  const c = state.shareCard;
+  return modal(
+    'Share your score',
+    html`<div class="share-preview">
+      ${c.status === 'ready'
+        ? html`<img src=${c.url} alt="Your score card" />`
+        : c.status === 'error'
+          ? html`<p class="muted">The image could not be created.</p>`
+          : html`<div class="share-preview__loading skeleton"></div>`}
+    </div>`,
+    html`<button class="btn btn--ghost btn--lg" @click=${copyShareText}>${icon('share')} Copy text</button>
+      ${canShareImage() ? html`<button class="btn btn--secondary btn--lg" @click=${shareImage}>${icon('share')} Share…</button>` : nothing}
+      <a class="btn btn--primary btn--lg ${c.status === 'ready' ? '' : 'is-disabled'}" href=${c.url ?? '#'} download="caravan-score.png">${icon('arrowDown')} Download image</a>`,
+    'lg',
+  );
+};
+
 const item = () => {
   const id = state.game?.merchantItem;
   if (!id) return nothing;
@@ -182,6 +252,10 @@ export function modalLayer(): TemplateResult | typeof nothing {
       return menu();
     case 'newGame':
       return newGame();
+    case 'newDaily':
+      return newDaily();
+    case 'share':
+      return share();
     case 'item':
       return item();
     default:

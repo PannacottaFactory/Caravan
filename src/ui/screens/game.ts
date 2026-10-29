@@ -308,7 +308,9 @@ export function gameScreen(): TemplateResult {
           ${iconButton('menu', 'Menu', () => openModal('menu'))}
           <div class="game-header__faction">
             ${crest(g.factionId, 'crest--sm')}
-            <span><strong>${faction.name}</strong>${g.mode === 'classical'
+            <span><strong>${faction.name}</strong>${g.daily
+              ? html`<small class="daily-badge">${icon('sun')} Daily challenge</small>`
+              : g.mode === 'classical'
               ? html`<small>Classical</small>`
               : html`<small class="danger-badge">${icon('skull')} Traveler · Disasters</small>`}</span>
           </div>

@@ -1,9 +1,9 @@
 import { html, nothing, type TemplateResult } from 'lit-html';
-import { ACHIEVEMENTS, FACTIONS, getFaction, isFactionUnlocked } from '../../engine';
-import { fmt } from '../components/common';
+import { ACHIEVEMENTS, dailyChallenge, dateKey, FACTIONS, getFaction, isFactionUnlocked, msUntilNextDaily } from '../../engine';
+import { fmt, formatDay, formatDuration } from '../components/common';
 import { crest } from '../components/ui';
 import { brand, icon } from '../icons';
-import { continueGame, newGameFromTitle, openModal, openRecords, state, toggleSound } from '../store';
+import { continueGame, dailyStatus, newGameFromTitle, openModal, openRecords, playDaily, state, toggleSound } from '../store';
 
 const SOCIALS = [
   { name: 'Twitter', icon: 'twitter', url: 'https://twitter.com/Victoriio' },
@@ -14,6 +14,34 @@ export function soundToggle(): TemplateResult {
   const muted = state.settings.muted;
   return html`<button class="icon-btn" @click=${toggleSound} aria-label=${muted ? 'Turn sound on' : 'Turn sound off'}
     title=${muted ? 'Sound off' : 'Sound on'}>${icon(muted ? 'soundOff' : 'soundOn')}</button>`;
+}
+
+function dailyCard(): TemplateResult {
+  const c = dailyChallenge(dateKey());
+  const status = dailyStatus();
+  const done = state.profile.daily?.date === c.date ? state.profile.daily : null;
+  return html`<section class="card daily-card ${status === 'done' ? 'is-done' : ''}" aria-label="Daily challenge">
+    <div class="daily-card__head">
+      <span class="daily-card__eyebrow">${icon('sun')} Daily challenge · ${formatDay(c.date)}</span>
+      <span class="daily-card__timer" title="Time before the next challenge">New in ${formatDuration(msUntilNextDaily())}</span>
+    </div>
+    <div class="daily-card__body">
+      ${crest(c.factionId, 'crest--md')}
+      <div>
+        <strong>${getFaction(c.factionId).name}</strong>
+        <span class="muted small">Classical · same journey for everyone · one try</span>
+      </div>
+    </div>
+    ${done
+      ? html`<div class="daily-card__done">
+          <span>Your score <strong>${fmt(done.score)}</strong></span>
+          <button class="btn btn--secondary btn--sm" @click=${() => openRecords('daily')}>${icon('podium')} Ranking</button>
+        </div>`
+      : html`<div class="daily-card__actions">
+          <button class="btn btn--primary btn--lg" @click=${playDaily}>${icon('play')} ${status === 'inProgress' ? 'Continue the challenge' : "Play today's challenge"}</button>
+          <button class="icon-btn" @click=${() => openRecords('daily')} aria-label="Today's ranking" title="Today's ranking">${icon('podium')}</button>
+        </div>`}
+  </section>`;
 }
 
 export function titleScreen(): TemplateResult {
@@ -53,6 +81,8 @@ export function titleScreen(): TemplateResult {
           </div>
         </div>
 
+        <div class="hero__side">
+        ${dailyCard()}
         <aside class="hero__card card" aria-label="Your progress">
           <h2 class="card__title">Your journey</h2>
           <div class="progress-stats">
@@ -70,6 +100,7 @@ export function titleScreen(): TemplateResult {
             <button class="btn btn--secondary" @click=${() => openModal('achievements')}>${icon('trophy')} Achievements</button>
           </div>
         </aside>
+        </div>
       </div>
 
       <footer class="title-footer">

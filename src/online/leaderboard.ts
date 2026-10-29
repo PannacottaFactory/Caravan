@@ -10,6 +10,7 @@ const API = `${SUPABASE_URL}/rest/v1`;
 const TIMEOUT_MS = 8000;
 
 export interface LeaderboardEntry {
+  daily?: string;
   client_id: string;
   player: string;
   faction: string;
@@ -35,7 +36,7 @@ async function request(path: string, init: RequestInit = {}): Promise<Response> 
     });
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { message?: string; code?: string } | null;
-      if (body?.code === '23505') throw new Error('This journey was already submitted');
+      if (body?.code === '23505') throw new Error('Already submitted');
       if (body?.code === 'PGRST205' || body?.code === '42P01') throw new Error('The online leaderboard is not available yet.');
       throw new Error(body?.message ?? `Server error (${res.status})`);
     }
@@ -62,10 +63,24 @@ export async function fetchTop(faction: string, mode: Mode, limit = 20): Promise
   return (await res.json()) as LeaderboardEntry[];
 }
 
+/** Today's (or any date's) daily challenge ranking. */
+export async function fetchDailyTop(date: string, limit = 20): Promise<LeaderboardEntry[]> {
+  const q = new URLSearchParams({
+    select: 'client_id,player,faction,mode,score,created_at,daily',
+    daily: `eq.${date}`,
+    order: 'score.desc,created_at.asc',
+    limit: String(limit),
+  });
+  const res = await request(`/daily_leaderboard?${q}`);
+  return (await res.json()) as LeaderboardEntry[];
+}
+
 /** Rank a score would have on the board (1 = first). */
-export async function rankOf(faction: string, mode: Mode, score: number): Promise<number> {
-  const q = new URLSearchParams({ select: 'client_id', faction: `eq.${faction}`, mode: `eq.${mode}`, score: `gt.${score}`, limit: '1' });
-  const res = await request(`/leaderboard?${q}`, { headers: { Prefer: 'count=exact' } });
+export async function rankOf(faction: string, mode: Mode, score: number, daily: string | null = null): Promise<number> {
+  const q = daily
+    ? new URLSearchParams({ select: 'client_id', daily: `eq.${daily}`, score: `gt.${score}`, limit: '1' })
+    : new URLSearchParams({ select: 'client_id', faction: `eq.${faction}`, mode: `eq.${mode}`, score: `gt.${score}`, limit: '1' });
+  const res = await request(`/${daily ? 'daily_leaderboard' : 'leaderboard'}?${q}`, { headers: { Prefer: 'count=exact' } });
   const total = Number(res.headers.get('content-range')?.split('/')[1] ?? 0);
   return (Number.isFinite(total) ? total : 0) + 1;
 }
@@ -84,7 +99,8 @@ export async function submitScore(game: GameState, player: string, clientId: str
       score: game.score.total,
       days: game.maxDay,
       seed: game.seed,
+      ...(game.daily ? { daily: game.daily } : {}),
     }),
   });
-  return rankOf(game.factionId, game.mode, game.score.total);
+  return rankOf(game.factionId, game.mode, game.score.total, game.daily ?? null);
 }

@@ -1,6 +1,7 @@
 -- Caravan — online leaderboard (simple version)
 -- Run once in Supabase: Dashboard → SQL Editor → New query → paste → Run.
--- Safe to run again: it drops and recreates the objects below.
+-- Safe to run again: it drops and recreates the objects below (and DELETES all scores).
+-- Then run migrations/002_daily.sql. For an existing database, run only the migrations.
 
 drop view if exists public.leaderboard;
 drop table if exists public.scores;

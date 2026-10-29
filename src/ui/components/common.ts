@@ -1,6 +1,16 @@
 import { html, type TemplateResult } from 'lit-html';
 
 export const fmt = (n: number): string => Math.round(n).toLocaleString('en-US');
+/** "29 Oct" from "2026-10-29". */
+export const formatDay = (date: string): string =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+/** "5h 12m" */
+export function formatDuration(ms: number): string {
+  const m = Math.max(0, Math.round(ms / 60000));
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+}
+
 export const signed = (n: number): string => (n > 0 ? `+${fmt(n)}` : fmt(n));
 
 /**

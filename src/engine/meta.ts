@@ -12,6 +12,8 @@ export interface Profile {
   totals: { gamesFinished: number; defeats: number; tradersAtEnd: number; camelsAtEnd: number };
   /** Ids of one-time popups already shown (merchant unlocked, witch unlocked, traveler unlocked). */
   seenPopups: string[];
+  /** Last daily challenge played to the end. */
+  daily?: { date: string; score: number };
 }
 
 export function createProfile(): Profile {
@@ -164,6 +166,7 @@ export function recordVictory(profile: Profile, game: GameState): RecordResult {
   after.totals.gamesFinished += 1;
   after.totals.tradersAtEnd += game.traders;
   after.totals.camelsAtEnd += game.camels;
+  if (game.daily) after.daily = { date: game.daily, score: game.score.total };
   return { profile: after, newRecord, ...withAchievements(profile, after, game) };
 }
 

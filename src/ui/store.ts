@@ -5,6 +5,9 @@ import {
   ACHIEVEMENTS,
   applyAction,
   capacity,
+  DAILY_UNLOCKS,
+  dailyChallenge,
+  dateKey,
   computeStats,
   createGame,
   weightCarried,
@@ -25,11 +28,12 @@ import {
 } from '../engine';
 import { clearGame, loadGame, loadProfile, loadSettings, saveGame, saveProfile, saveSettings, type Settings } from '../storage/storage';
 import { playSfx, setMuted } from './audio';
-import { fetchTop, isValidPlayerName, submitScore, type LeaderboardEntry } from '../online/leaderboard';
+import { renderScoreCard } from './share';
+import { fetchDailyTop, fetchTop, isValidPlayerName, submitScore, type LeaderboardEntry } from '../online/leaderboard';
 
 export type Screen = 'title' | 'factions' | 'prepare' | 'game';
 export type Tab = 'buy' | 'sell' | 'crew' | 'save';
-export type Modal = 'howto' | 'credits' | 'records' | 'achievements' | 'menu' | 'newGame' | 'item' | null;
+export type Modal = 'howto' | 'credits' | 'records' | 'achievements' | 'menu' | 'newGame' | 'newDaily' | 'item' | 'share' | null;
 
 export interface Toast {
   id: number;
@@ -40,6 +44,13 @@ export interface Toast {
 export interface OnlineBoard {
   faction: string;
   mode: Mode;
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  entries: LeaderboardEntry[];
+  error?: string;
+}
+
+export interface DailyBoard {
+  date: string;
   status: 'idle' | 'loading' | 'ready' | 'error';
   entries: LeaderboardEntry[];
   error?: string;
@@ -76,9 +87,12 @@ export interface AppState {
   /** Result of the last finished game (victory screen). */
   lastResult: RecordResult | null;
   /** Online leaderboard */
-  recordsTab: 'local' | 'world';
+  recordsTab: 'local' | 'world' | 'daily';
+  victoryTab: 'score' | 'journey';
   board: OnlineBoard;
+  dailyBoard: DailyBoard;
   submission: Submission;
+  shareCard: { status: 'idle' | 'loading' | 'ready' | 'error'; url?: string; blob?: Blob };
   toasts: Toast[];
 }
 
@@ -101,8 +115,11 @@ export const state: AppState = {
   dayBanner: 0,
   lastResult: null,
   recordsTab: 'local',
+  victoryTab: 'score',
   board: { faction: FACTIONS[0]!.id, mode: 'classical', status: 'idle', entries: [] },
+  dailyBoard: { date: '', status: 'idle', entries: [] },
   submission: { seed: null, status: 'idle' },
+  shareCard: { status: 'idle' },
   toasts: [],
 };
 
@@ -337,7 +354,7 @@ function handleEvents(game: GameState, events: GameEvent[]): void {
         const r = recordVictory(state.profile, game);
         commitProfile(r, false); // achievements are listed in the victory panel
         clearGame();
-        update({ lastResult: r });
+        update({ lastResult: r, victoryTab: 'score' });
         break;
       }
     }
@@ -358,34 +375,117 @@ export function retryDay(): void {
   dispatch({ type: 'retryDay' });
 }
 
-export async function shareScore(): Promise<void> {
+function shareText(): string {
+  const g = state.game;
+  if (!g?.score) return '';
+  const where = g.daily ? "today's Caravan daily challenge" : `Caravan with ${getFaction(g.factionId).name}`;
+  return `I made ${g.score.total.toLocaleString('en-US')} points in ${where}! Can you beat my score? ${location.href.split('#')[0]}`;
+}
+
+/** Opens the share dialog and draws the score card. */
+export async function openShare(): Promise<void> {
   const g = state.game;
   if (!g?.score) return;
-  const text = `I made ${g.score.total.toLocaleString('en-US')} points with ${getFaction(g.factionId).name} in Caravan! Can you beat my score?`;
-  const url = location.href.split('#')[0] ?? '';
+  if (state.shareCard.url) URL.revokeObjectURL(state.shareCard.url);
+  update({ shareCard: { status: 'loading' } });
+  openModal('share');
   try {
-    if (navigator.share) {
-      await navigator.share({ title: 'Caravan', text, url });
-      return;
-    }
-    await navigator.clipboard.writeText(`${text} ${url}`);
-    toast('Score copied to the clipboard', 'success');
+    const rank = state.submission.seed === g.seed && state.submission.status === 'done' ? (state.submission.rank ?? null) : null;
+    const blob = await renderScoreCard(g, rank);
+    update({ shareCard: { status: 'ready', blob, url: URL.createObjectURL(blob) } });
   } catch {
-    // Share cancelled by the user.
+    update({ shareCard: { status: 'error' } });
+  }
+}
+
+export function canShareImage(): boolean {
+  const blob = state.shareCard.blob;
+  if (!blob || !navigator.canShare) return false;
+  return navigator.canShare({ files: [new File([blob], 'caravan-score.png', { type: 'image/png' })] });
+}
+
+export async function shareImage(): Promise<void> {
+  const blob = state.shareCard.blob;
+  if (!blob) return;
+  try {
+    await navigator.share({ files: [new File([blob], 'caravan-score.png', { type: 'image/png' })], text: shareText() });
+  } catch {
+    // cancelled
+  }
+}
+
+export async function copyShareText(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(shareText());
+    toast('Text copied to the clipboard', 'success');
+  } catch {
+    toast('Could not copy the text', 'error');
   }
 }
 
 // ------------------------------------------------------------------ online leaderboard
 
-export function openRecords(tab: 'local' | 'world', faction?: string, mode?: Mode): void {
+export function openRecords(tab: 'local' | 'world' | 'daily', faction?: string, mode?: Mode): void {
   update({ recordsTab: tab });
   openModal('records');
   if (tab === 'world') void loadBoard(faction ?? state.board.faction, mode ?? state.board.mode);
+  if (tab === 'daily') void loadDailyBoard();
 }
 
-export function setRecordsTab(tab: 'local' | 'world'): void {
+export function setRecordsTab(tab: 'local' | 'world' | 'daily'): void {
   update({ recordsTab: tab });
   if (tab === 'world' && state.board.status !== 'ready') void loadBoard(state.board.faction, state.board.mode);
+  if (tab === 'daily') void loadDailyBoard();
+}
+
+export async function loadDailyBoard(date = dateKey()): Promise<void> {
+  update({ dailyBoard: { date, status: 'loading', entries: state.dailyBoard.date === date ? state.dailyBoard.entries : [] } });
+  try {
+    const entries = await fetchDailyTop(date);
+    update({ dailyBoard: { date, status: 'ready', entries } });
+  } catch (e) {
+    update({ dailyBoard: { date, status: 'error', entries: [], error: (e as Error).message } });
+  }
+}
+
+// ------------------------------------------------------------------ daily challenge
+
+export type DailyStatus = 'new' | 'inProgress' | 'done';
+
+export function dailyStatus(): DailyStatus {
+  const today = dateKey();
+  if (state.profile.daily?.date === today) return 'done';
+  if (state.game?.daily === today && state.game.phase !== 'victory') return 'inProgress';
+  return 'new';
+}
+
+/** "Daily challenge" button: continue it, start it, or ask before abandoning another journey. */
+export function playDaily(): void {
+  const status = dailyStatus();
+  if (status === 'done') return;
+  if (status === 'inProgress') return continueGame();
+  if (state.game && state.game.phase !== 'victory') return openModal('newDaily');
+  startDaily();
+}
+
+export function startDaily(): void {
+  const c = dailyChallenge(dateKey());
+  const game = createGame({ mode: c.mode, factionId: c.factionId, seed: c.seed, unlocks: DAILY_UNLOCKS, daily: c.date });
+  saveGame(game);
+  playSfx('click');
+  update({
+    game,
+    screen: 'game',
+    modal: null,
+    tab: 'buy',
+    buyDraft: {},
+    sellDraft: {},
+    lastResult: null,
+    dayBanner: state.dayBanner + 1,
+    factionIndex: Math.max(0, FACTIONS.findIndex((f) => f.id === c.factionId)),
+    mode: c.mode,
+    improvements: [],
+  });
 }
 
 let boardRequest = 0;

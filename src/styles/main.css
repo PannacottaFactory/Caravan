@@ -2242,6 +2242,312 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   to { transform: translate3d(calc((var(--i) - 12) * 6px), 110vh, 0) rotate(calc(var(--i) * 90deg)); opacity: 0.2; }
 }
 
+.victory__tab {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: panel-in 0.4s var(--ease) backwards;
+}
+
+/* Share dialog */
+.share-preview img,
+.share-preview__loading {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  border-radius: 16px;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-md);
+}
+.share-preview img {
+  animation: pop 0.5s var(--spring);
+}
+.share-preview__loading {
+  background: linear-gradient(90deg, rgb(255 240 220 / 0.03), rgb(255 240 220 / 0.08), rgb(255 240 220 / 0.03));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+a.btn {
+  text-decoration: none;
+}
+.btn.is-disabled {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+/* Daily challenge */
+.hero__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.daily-card {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(140deg, rgb(244 183 74 / 0.16), rgb(30 22 19 / 0.97) 55%);
+  border-color: var(--gold-line);
+  animation: rise 0.9s var(--ease) backwards 0.35s;
+}
+.daily-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.daily-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.daily-card__eyebrow .icon {
+  width: 16px;
+  height: 16px;
+}
+.daily-card__timer {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.daily-card__body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.daily-card__body > div {
+  display: flex;
+  flex-direction: column;
+}
+.daily-card__body strong {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 650;
+  line-height: 1.1;
+}
+.crest--md {
+  width: 46px;
+  height: 52px;
+}
+.daily-card__actions {
+  display: flex;
+  gap: 10px;
+}
+.daily-card__actions .btn {
+  flex: 1;
+}
+.daily-card__actions .icon-btn {
+  width: 50px;
+  height: 50px;
+}
+.daily-card__done {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--green-soft);
+  color: var(--text-2);
+}
+.daily-card__done strong {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--green);
+  margin-left: 4px;
+}
+.daily-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-line);
+}
+.daily-head > div {
+  display: flex;
+  flex-direction: column;
+}
+.daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--gold-soft);
+  color: var(--gold) !important;
+  font-weight: 650;
+}
+.daily-badge .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Journey recap */
+.recap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.recap__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.recap__tile {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgb(255 240 220 / 0.035);
+  border: 1px solid var(--line);
+}
+.recap__tile span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.recap__tile strong {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.recap__tile small {
+  color: var(--text-2);
+}
+.recap__chart {
+  margin: 0;
+  padding: 14px 14px 6px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 0.18);
+  border: 1px solid var(--line);
+}
+.recap__chart figcaption {
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+.recap__plot {
+  position: relative;
+}
+.recap__plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.recap__grid {
+  stroke: rgb(255 240 220 / 0.08);
+  stroke-width: 1;
+}
+.recap__axis {
+  fill: var(--text-3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+.recap__line {
+  fill: none;
+  stroke: #f4b74a;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.4s var(--ease) forwards 0.2s;
+}
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+.recap__area {
+  animation: fade 1s var(--ease) backwards 0.6s;
+}
+.recap__cross {
+  stroke: rgb(255 240 220 / 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.recap__dot {
+  fill: #f4b74a;
+  stroke: #1e1714;
+  stroke-width: 2.5;
+}
+.recap__best {
+  fill: #fff3dc;
+  stroke: #1e1714;
+  stroke-width: 2.5;
+}
+.recap__tip {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, calc(-100% - 14px));
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 150px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #2f2520;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--shadow-md);
+  font-size: 0.82rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.recap__tip strong {
+  font-size: 0.9rem;
+}
+.recap__tip-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--gold);
+}
+.recap__tip-action .icon {
+  width: 14px;
+  height: 14px;
+}
+.recap__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recap__actions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgb(255 240 220 / 0.05);
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+  color: var(--text-2);
+}
+.recap__actions .icon {
+  width: 15px;
+  height: 15px;
+  color: var(--gold);
+}
+.recap__actions strong {
+  color: var(--text);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* Modal content */
 .lead {
   font-size: 1.1rem;

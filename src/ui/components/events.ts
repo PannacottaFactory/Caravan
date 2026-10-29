@@ -16,9 +16,10 @@ import {
 import { img } from '../assets';
 import { disasterArt, itemArt, powerArt } from '../art';
 import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
-import { fmt, num } from './common';
-import { crest } from './ui';
-import { backToMenu, dispatch, openRecords, retryDay, shareScore, startGame, state, submitCurrentScore, update } from '../store';
+import { fmt, formatDay, num } from './common';
+import { crest, segmented } from './ui';
+import { recap } from './recap';
+import { backToMenu, dispatch, goTo, openRecords, retryDay, openShare, startGame, state, submitCurrentScore, update } from '../store';
 
 function dialog(kind: string, content: TemplateResult): TemplateResult {
   return html`<div class="overlay overlay--${kind}" role="dialog" aria-modal="true">
@@ -190,7 +191,7 @@ function victory(g: GameState): TemplateResult {
           ${crest(g.factionId, 'crest--lg')}
           <p class="dialog__eyebrow">Journey complete</p>
           <h3 class="victory__title">Victory</h3>
-          <p class="muted">${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}</p>
+          <p class="muted">${g.daily ? html`Daily challenge · ${formatDay(g.daily)} · ` : nothing}${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}</p>
           <div class="victory__total">
             <span>Total score</span>
             <strong>${num(s.total)}</strong>
@@ -199,6 +200,17 @@ function victory(g: GameState): TemplateResult {
           <p class="punchline">${punchline}</p>
         </div>
         <div class="victory__main">
+          ${segmented(
+            [
+              { id: 'score', label: 'Score', icon: 'trophy' },
+              { id: 'journey', label: 'Journey', icon: 'sun' },
+            ],
+            state.victoryTab,
+            (tab) => update({ victoryTab: tab }),
+          )}
+          ${state.victoryTab === 'journey'
+            ? keyed('journey', html`<div class="victory__tab">${recap(g)}</div>`)
+            : keyed('score', html`<div class="victory__tab">
           <ul class="score">
             ${row(coinArt(), 'Gold', s.gold, 1, s.gold)}
             ${row(html`<span class="score__crew">${traderArt()}</span>`, 'Traders', g.traders, CREW_POINTS.trader, s.traders)}
@@ -214,11 +226,14 @@ function victory(g: GameState): TemplateResult {
                 ${r.newAchievements.map((id) => html`<span class="unlock-chip unlock-chip--gold">${icon('trophy')} ${ACHIEVEMENTS.find((x) => x.id === id)?.name ?? id}</span>`)}
               </div>`
             : nothing}
+          </div>`)}
           ${onlineSubmit(g)}
           <footer class="dialog__actions">
             <button class="btn btn--ghost btn--lg" @click=${backToMenu}>Menu</button>
-            <button class="btn btn--secondary btn--lg" @click=${shareScore}>${icon('share')} Share</button>
-            <button class="btn btn--primary btn--lg" @click=${startGame}>${icon('refresh')} Play again</button>
+            <button class="btn btn--secondary btn--lg" @click=${openShare}>${icon('share')} Share</button>
+            ${g.daily
+              ? html`<button class="btn btn--primary btn--lg" @click=${() => goTo('factions')}>${icon('play')} New journey</button>`
+              : html`<button class="btn btn--primary btn--lg" @click=${startGame}>${icon('refresh')} Play again</button>`}
           </footer>
         </div>
       </div>
@@ -228,12 +243,14 @@ function victory(g: GameState): TemplateResult {
 
 function onlineSubmit(g: GameState): TemplateResult {
   const sub = state.submission.seed === g.seed ? state.submission : { status: 'idle' as const, rank: undefined, error: undefined };
-  const board = `${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}`;
+  const board = g.daily
+    ? `daily challenge (${formatDay(g.daily)})`
+    : `${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}`;
   if (sub.status === 'done') {
     return html`<div class="online online--done">
       <span class="online__icon">${icon('podium')}</span>
       <span>You are <strong>#${sub.rank}</strong> on the ${board} leaderboard</span>
-      <button class="btn btn--ghost btn--sm" @click=${() => openRecords('world', g.factionId, g.mode)}>View</button>
+      <button class="btn btn--ghost btn--sm" @click=${() => (g.daily ? openRecords('daily') : openRecords('world', g.factionId, g.mode))}>View</button>
     </div>`;
   }
   const sending = sub.status === 'sending';
