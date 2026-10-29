@@ -83,6 +83,7 @@ export function scene(mode: 'hero' | 'game', danger = false): TemplateResult {
       ${caravanSilhouette()}
       ${dune('dune--4', 'M0 120C260 40 540 150 860 110S1340 30 1600 90V400H0Z', '#a7543a', '#47211c', 'gd4')}
       <div class="scene__shade"></div>
+      <div class="scene__danger"></div>
     </div>
   `;
 }

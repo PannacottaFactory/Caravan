@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, DAILY_UNLOCKS, dailyChallenge, dateKey, FACTIONS, msUntilNextDaily } from '../src/engine';
+import { computeStats, createGame, DAILY_UNLOCKS, dailyChallenge, dailyEffects, dateKey, FACTIONS, msUntilNextDaily, type ResourceId } from '../src/engine';
 import { act, newGame, withFood } from './helpers';
 
 describe('journey history', () => {
@@ -47,5 +47,23 @@ describe('daily challenge', () => {
   it('date helpers use UTC', () => {
     expect(dateKey(new Date('2026-10-29T23:30:00Z'))).toBe('2026-10-29');
     expect(msUntilNextDaily(new Date('2026-10-29T23:00:00Z'))).toBe(3600_000);
+  });
+
+  it('has three twists: a boom, a slump on another good, and a rule', () => {
+    for (let d = 1; d <= 28; d++) {
+      const c = dailyChallenge(`2026-11-${String(d).padStart(2, '0')}`);
+      expect(c.twists.map((t) => t.kind)).toEqual(['boom', 'slump', 'rule']);
+      expect(c.twists[0]!.id.replace('boom-', '')).not.toBe(c.twists[1]!.id.replace('slump-', ''));
+    }
+  });
+
+  it('applies the twists to the game', () => {
+    const c = dailyChallenge('2026-10-29');
+    const g = createGame({ mode: c.mode, factionId: c.factionId, seed: c.seed, unlocks: DAILY_UNLOCKS, daily: c.date, extraEffects: dailyEffects(c) });
+    const plain = createGame({ mode: c.mode, factionId: c.factionId, seed: c.seed, unlocks: DAILY_UNLOCKS });
+    const boom = c.twists[0]!.id.replace('boom-', '') as ResourceId;
+    const slump = c.twists[1]!.id.replace('slump-', '') as ResourceId;
+    expect(computeStats(g).resource[boom].sellPrice).toBe(Math.round(computeStats(plain).resource[boom].sellPrice * 1.4));
+    expect(computeStats(g).resource[slump].sellPrice).toBe(Math.round(computeStats(plain).resource[slump].sellPrice * 0.7));
   });
 });

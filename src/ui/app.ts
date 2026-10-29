@@ -8,7 +8,7 @@ import { factionScreen } from './screens/factions';
 import { gameScreen } from './screens/game';
 import { prepareScreen } from './screens/prepare';
 import { titleScreen } from './screens/title';
-import { closeModal, onChange, state } from './store';
+import { closeModal, dangerTheme, onChange, state } from './store';
 import { devPanel, installDevShortcut } from './dev';
 
 function currentScreen() {
@@ -29,8 +29,8 @@ const TOAST_ICON = { error: 'warning', info: 'info', success: 'trophy' } as cons
 function view() {
   return html`
     ${artDefs()}
-    ${scene(state.screen === 'title' ? 'hero' : 'game', state.screen === 'game' && state.game?.mode === 'traveler')}
-    <main class="app app--${state.screen}">${keyed(state.screen, currentScreen())}</main>
+    ${scene(state.screen === 'title' ? 'hero' : 'game', dangerTheme())}
+    <main class="app app--${state.screen} ${dangerTheme() ? 'theme-danger' : ''}">${keyed(state.screen, currentScreen())}</main>
     ${modalLayer()}
     ${import.meta.env.DEV ? devPanel() : nothing}
     <div class="toasts" aria-live="polite">

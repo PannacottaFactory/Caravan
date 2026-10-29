@@ -9,6 +9,9 @@ import {
   getFaction,
   getMerchantItem,
   merchantArrivesTomorrow,
+  dailyChallenge,
+  BOOM_PERCENT,
+  SLUMP_PERCENT,
   MODES,
   previewBuy,
   previewSell,
@@ -24,6 +27,7 @@ import { itemArt } from '../art';
 import { fmt, holdRepeat, num } from '../components/common';
 import { eventOverlay } from '../components/events';
 import { crest, iconButton, segmented } from '../components/ui';
+import { twistChips } from '../components/twists';
 import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
 import { changeDraft, dispatch, maxQuantity, openModal, setTab, state, toggleMax, type Tab } from '../store';
 import { soundToggle } from './title';
@@ -76,7 +80,9 @@ function sidebar(g: GameState, stats: Stats): TemplateResult {
   const danger = !lastDay && eat > g.inventory.food;
   const goods = RESOURCE_IDS.filter((id) => id !== 'food' && g.inventory[id] > 0);
 
+  const twists = g.daily ? dailyChallenge(g.daily).twists : null;
   return html`<aside class="game-sidebar">
+    ${twists ? html`<div class="stat stat--twists"><span class="stat__label">Today's twists</span>${twistChips(twists, 'twists--compact')}</div>` : nothing}
     <div class="stat stat--gold">
       ${coinArt('stat__art')}
       <div class="stat__body">
@@ -148,6 +154,16 @@ function stepper(kind: 'buy' | 'sell', id: ResourceId, value: number): TemplateR
   </div>`;
 }
 
+/** Daily challenge: "+40%" / "−30%" tag next to a boomed or slumped selling price. */
+function twistTag(g: GameState, id: ResourceId): TemplateResult | typeof nothing {
+  if (!g.daily) return nothing;
+  const twist = dailyChallenge(g.daily).twists.find((t) => t.kind !== 'rule' && t.id.endsWith(`-${id}`));
+  if (!twist) return nothing;
+  return html`<span class="price-tag price-tag--${twist.kind}" title=${twist.description}>
+    ${twist.kind === 'boom' ? `+${BOOM_PERCENT}%` : `−${SLUMP_PERCENT}%`}
+  </span>`;
+}
+
 function market(kind: 'buy' | 'sell', g: GameState, stats: Stats): TemplateResult {
   const draft = kind === 'buy' ? state.buyDraft : state.sellDraft;
   return html`<div class="market">
@@ -164,7 +180,7 @@ function market(kind: 'buy' | 'sell', g: GameState, stats: Stats): TemplateResul
           ${resourceArt(id, 'good__art')}
           <span class="good__text"><strong>${RESOURCES[id].name}</strong><small>Owned ${owned}${q ? html` <em>${kind === 'buy' ? '+' : '−'}${q}</em>` : nothing}</small></span>
         </span>
-        <span class="price">${fmt(price)}${coinArt('price__coin')}</span>
+        <span class="price">${fmt(price)}${coinArt('price__coin')}${kind === 'sell' ? twistTag(g, id) : nothing}</span>
         <span class="weight">${r.unitWeight}<small>kg</small></span>
         ${stepper(kind, id, q)}
         <span class="subtotal ${q ? 'is-set' : ''}">${q ? `${kind === 'buy' ? '−' : '+'}${fmt(q * price)}` : '—'}</span>

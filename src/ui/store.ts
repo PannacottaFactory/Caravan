@@ -7,6 +7,7 @@ import {
   capacity,
   DAILY_UNLOCKS,
   dailyChallenge,
+  dailyEffects,
   dateKey,
   computeStats,
   createGame,
@@ -470,7 +471,7 @@ export function playDaily(): void {
 
 export function startDaily(): void {
   const c = dailyChallenge(dateKey());
-  const game = createGame({ mode: c.mode, factionId: c.factionId, seed: c.seed, unlocks: DAILY_UNLOCKS, daily: c.date });
+  const game = createGame({ mode: c.mode, factionId: c.factionId, seed: c.seed, unlocks: DAILY_UNLOCKS, daily: c.date, extraEffects: dailyEffects(c) });
   saveGame(game);
   playSfx('click');
   update({
@@ -529,4 +530,11 @@ export async function submitCurrentScore(name: string): Promise<void> {
   } catch (e) {
     update({ submission: { seed: game.seed, status: 'error', error: (e as Error).message } });
   }
+}
+
+/** Traveler mode makes the whole interface red and dangerous. */
+export function dangerTheme(): boolean {
+  if (state.screen === 'game') return state.game?.mode === 'traveler';
+  if (state.screen === 'factions' || state.screen === 'prepare') return state.mode === 'traveler';
+  return false;
 }

@@ -76,6 +76,8 @@ export interface NewGameConfig {
   unlocks: { merchant: boolean; witch: boolean };
   /** Marks the game as the daily challenge of this date (YYYY-MM-DD). */
   daily?: string;
+  /** Extra starting effects (daily challenge twists). */
+  extraEffects?: Effect[];
 }
 
 export type GameEvent =
@@ -189,6 +191,7 @@ export function createGame(config: NewGameConfig): GameState {
   const startEffects: Effect[] = [
     ...improvements.flatMap((id) => getImprovement(id).effects),
     ...faction.effects.filter((e: ModeEffect) => !e.mode || e.mode === config.mode),
+    ...(config.extraEffects ?? []),
   ];
   const statMods = startEffects.filter(isStatModifier).map((m, i) => ({ m, i }));
   statMods.sort((a, b) => OP_ORDER[a.m.op] - OP_ORDER[b.m.op] || a.i - b.i);

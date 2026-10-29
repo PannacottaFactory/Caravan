@@ -105,6 +105,9 @@ export function factionScreen(): TemplateResult {
               <strong>${playable ? f.bonus : '???'}</strong>
             </div>
 
+            ${state.mode === 'traveler'
+              ? html`<div class="danger-note">${icon('skull')}<span><strong>Traveler mode.</strong> 20 days, no crew and no food to start, and a disaster will strike near the end of the journey.</span></div>`
+              : nothing}
             ${requirement
               ? html`<p class="requirement">${icon('lock')} ${requirement}</p>`
               : html`<p class="requirement requirement--ok">${icon('check')} Ready to travel — ${mode.description}</p>`}

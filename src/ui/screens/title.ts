@@ -2,6 +2,7 @@ import { html, nothing, type TemplateResult } from 'lit-html';
 import { ACHIEVEMENTS, dailyChallenge, dateKey, FACTIONS, getFaction, isFactionUnlocked, msUntilNextDaily } from '../../engine';
 import { fmt, formatDay, formatDuration } from '../components/common';
 import { crest } from '../components/ui';
+import { twistChips } from '../components/twists';
 import { brand, icon } from '../icons';
 import { continueGame, dailyStatus, newGameFromTitle, openModal, openRecords, playDaily, state, toggleSound } from '../store';
 
@@ -32,6 +33,7 @@ function dailyCard(): TemplateResult {
         <span class="muted small">Classical · same journey for everyone · one try</span>
       </div>
     </div>
+    ${twistChips(c.twists)}
     ${done
       ? html`<div class="daily-card__done">
           <span>Your score <strong>${fmt(done.score)}</strong></span>

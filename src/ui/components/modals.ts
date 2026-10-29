@@ -4,6 +4,7 @@ import { itemArt } from '../art';
 import { coinArt, icon, resourceArt } from '../icons';
 import { fmt, formatDay } from './common';
 import { crest, segmented } from './ui';
+import { twistChips } from './twists';
 import {
   abandonGameAndChooseFaction,
   backToMenu,
@@ -128,6 +129,7 @@ const dailyRecords = () => {
         <span class="muted small">${getFaction(c.factionId).name} · Classical · same journey for everyone</span>
       </div>
     </div>
+    ${twistChips(c.twists, 'twists--row')}
     ${b.status === 'error'
       ? html`<div class="world__empty">${icon('warning')}<p>${b.error}</p>
           <button class="btn btn--secondary btn--sm" @click=${() => void loadDailyBoard()}>${icon('refresh')} Retry</button></div>`

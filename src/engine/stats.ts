@@ -42,8 +42,9 @@ export function computeStats(state: Pick<GameState, 'modifiers'>): Stats {
   }
   for (const id of RESOURCE_IDS) {
     const r = resource[id];
-    r.buyPrice = Math.max(0, r.buyPrice);
-    r.sellPrice = Math.max(0, r.sellPrice);
+    // Percentage modifiers (daily twists) can produce decimals: prices stay whole numbers.
+    r.buyPrice = Math.max(0, Math.round(r.buyPrice));
+    r.sellPrice = Math.max(0, Math.round(r.sellPrice));
     r.unitWeight = Math.max(0, r.unitWeight);
   }
   return { global, resource };
