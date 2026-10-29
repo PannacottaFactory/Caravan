@@ -2511,6 +2511,78 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   color: var(--text-3);
 }
 
+/* Test panel (dev server only) */
+.dev {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+.dev__toggle {
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: #3d6bd6;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  box-shadow: var(--shadow-md);
+}
+.dev__panel {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #151a26;
+  border: 1px solid #3d6bd6;
+  box-shadow: var(--shadow-lg);
+  animation: pop 0.3s var(--spring);
+}
+.dev__title {
+  font-weight: 700;
+  color: #9db8ff;
+}
+.dev__title small {
+  font-weight: 400;
+  color: #8a93a8;
+}
+.dev__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dev button:not(.dev__toggle),
+.dev select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #24304a;
+  border: 1px solid #34436a;
+  color: #e6ecff;
+  font: inherit;
+}
+.dev button:not(.dev__toggle):hover:not(:disabled) {
+  background: #2f3f63;
+}
+.dev button:disabled,
+.dev select:disabled {
+  opacity: 0.4;
+}
+.dev__select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #c9d4f2;
+}
+
 /* Toasts */
 .toasts {
   position: fixed;

@@ -1,4 +1,4 @@
-import { html, render } from 'lit-html';
+import { html, nothing, render } from 'lit-html';
 import { keyed } from 'lit-html/directives/keyed.js';
 import { installScene, scene } from './components/scene';
 import { modalLayer } from './components/modals';
@@ -9,6 +9,7 @@ import { gameScreen } from './screens/game';
 import { prepareScreen } from './screens/prepare';
 import { titleScreen } from './screens/title';
 import { closeModal, onChange, state } from './store';
+import { devPanel, installDevShortcut } from './dev';
 
 function currentScreen() {
   switch (state.screen) {
@@ -31,6 +32,7 @@ function view() {
     ${scene(state.screen === 'title' ? 'hero' : 'game')}
     <main class="app app--${state.screen}">${keyed(state.screen, currentScreen())}</main>
     ${modalLayer()}
+    ${import.meta.env.DEV ? devPanel() : nothing}
     <div class="toasts" aria-live="polite">
       ${state.toasts.map((t) => html`<div class="toast toast--${t.kind}">${icon(TOAST_ICON[t.kind])}<span>${t.text}</span></div>`)}
     </div>
@@ -39,6 +41,7 @@ function view() {
 
 export function startApp(root: HTMLElement): void {
   installScene();
+  if (import.meta.env.DEV) installDevShortcut();
   onChange(() => render(view(), root));
   render(view(), root);
   window.addEventListener('pointerdown', unlockAudio, { capture: true });
