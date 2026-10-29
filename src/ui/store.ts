@@ -416,6 +416,11 @@ export async function submitCurrentScore(name: string): Promise<void> {
     return;
   }
   setPlayerName(player);
+  if (import.meta.env.DEV) {
+    // Local test server: never pollute the real leaderboard.
+    update({ submission: { seed: game.seed, status: 'error', error: 'Test mode (local server): scores are not sent online.' } });
+    return;
+  }
   update({ submission: { seed: game.seed, status: 'sending' } });
   try {
     const rank = await submitScore(game, player, state.settings.clientId);

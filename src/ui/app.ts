@@ -1,6 +1,6 @@
 import { html, render } from 'lit-html';
 import { keyed } from 'lit-html/directives/keyed.js';
-import { scene } from './components/scene';
+import { installScene, scene } from './components/scene';
 import { modalLayer } from './components/modals';
 import { artDefs, icon } from './icons';
 import { unlockAudio } from './audio';
@@ -38,6 +38,7 @@ function view() {
 }
 
 export function startApp(root: HTMLElement): void {
+  installScene();
   onChange(() => render(view(), root));
   render(view(), root);
   window.addEventListener('pointerdown', unlockAudio, { capture: true });

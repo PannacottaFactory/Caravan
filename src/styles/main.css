@@ -410,14 +410,18 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 .dune--2 { height: 43vh; }
 .dune--3 { height: 31vh; }
 .dune--4 { height: 17vh; }
+/* The caravan follows the crest of dune 3: --crest is a path() computed in
+   scene.ts from the dune's own curve, scaled to the window size. */
 .caravan {
   position: absolute;
   left: 0;
-  bottom: calc(31vh * 0.822);
+  top: 0;
   width: clamp(110px, 10vw, 170px);
   color: #3a1b1d;
+  offset-path: var(--crest);
+  offset-anchor: 50% 96%;
+  offset-rotate: auto;
   animation: walk 150s linear infinite -48s;
-  will-change: transform;
 }
 .caravan svg {
   display: block;
@@ -430,8 +434,8 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   width: 13%;
 }
 @keyframes walk {
-  from { transform: translate3d(-15vw, 0, 0); }
-  to { transform: translate3d(110vw, 0, 0); }
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
 }
 .scene__shade {
   position: absolute;
@@ -502,7 +506,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 }
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 500px);
   align-items: center;
   gap: 48px;
   padding-bottom: 8vh;
@@ -543,10 +547,10 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   from { opacity: 0; transform: translateY(18px); }
 }
 .hero__card {
-  padding: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
   animation: rise 0.9s var(--ease) backwards 0.4s;
 }
 .progress-stats {
@@ -554,17 +558,20 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
+.hero__card .card__title {
+  font-size: 1.6rem;
+}
 .progress-stat {
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 16px;
   border-radius: var(--r-sm);
   background: rgb(255 240 220 / 0.04);
   border: 1px solid var(--line);
 }
 .progress-stat strong {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 600;
   color: var(--gold);
 }
@@ -573,18 +580,25 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   color: var(--text-3);
 }
 .progress-stat span {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-3);
 }
 .crest-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+}
+.crest-row .crest--mini {
+  width: 32px;
+  height: 36px;
 }
 .hero__card-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
+}
+.hero__card-actions .btn {
+  --h: 50px;
 }
 .title-footer {
   display: flex;
@@ -2549,7 +2563,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
     grid-template-columns: auto minmax(240px, 1fr) auto;
   }
   .hero {
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 400px;
   }
 }
 

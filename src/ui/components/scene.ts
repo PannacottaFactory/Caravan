@@ -12,6 +12,45 @@ const STARS = Array.from({ length: 46 }, (_, i) => {
   return svg`<circle cx=${x.toFixed(1)} cy=${y.toFixed(1)} r=${r.toFixed(2)} />`;
 });
 
+/** Top edge of dune 3 (viewBox 1600×400). The caravan walks along it. */
+const CREST = 'M0 150C110 96 200 74 330 70C620 62 920 78 1270 70C1420 72 1510 102 1600 128';
+const DUNE3_HEIGHT = 0.31; // must match .dune--3 { height: 31vh }
+
+/**
+ * Converts the crest into screen pixels and exposes it as the CSS variable --crest,
+ * used by `.caravan { offset-path: var(--crest) }`. Extended off-screen on both sides
+ * so the caravan enters and leaves smoothly.
+ */
+function updateCrestPath(): void {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const duneH = h * DUNE3_HEIGHT;
+  const top = h - duneH;
+  const X = (x: number) => ((x * w) / 1600).toFixed(1);
+  const Y = (y: number) => (top + (y * duneH) / 400).toFixed(1);
+  const tokens = CREST.match(/[MC]|-?\d+(?:\.\d+)?/g) ?? [];
+  let out = '';
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i]!;
+    if (t === 'M' || t === 'C') {
+      out += ` ${t === 'M' ? 'L' : 'C'}`;
+      continue;
+    }
+    out += ` ${X(Number(t))} ${Y(Number(tokens[++i]))}`;
+  }
+  const path = `M${(-0.15 * w).toFixed(1)} ${Y(150)}${out} L${(1.15 * w).toFixed(1)} ${Y(128)}`;
+  document.documentElement.style.setProperty('--crest', `path("${path}")`);
+}
+
+export function installScene(): void {
+  updateCrestPath();
+  let frame = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(updateCrestPath);
+  });
+}
+
 const dune = (cls: string, d: string, top: string, bottom: string, id: string): TemplateResult => html`
   <svg class="dune ${cls}" viewBox="0 0 1600 400" preserveAspectRatio="none" aria-hidden="true">
     <defs>
@@ -40,7 +79,7 @@ export function scene(mode: 'hero' | 'game'): TemplateResult {
       <div class="scene__sun"></div>
       ${dune('dune--1', 'M0 170C180 110 330 120 520 150S860 70 1090 112 1440 150 1600 92V400H0Z', '#7d4660', '#5a3150', 'gd1')}
       ${dune('dune--2', 'M0 182C230 120 430 210 700 160S1110 96 1310 152 1520 176 1600 150V400H0Z', '#b45f55', '#7e3d48', 'gd2')}
-      ${dune('dune--3', 'M0 150C110 96 200 74 330 70C620 62 920 78 1270 70C1420 72 1510 102 1600 128V400H0Z', '#e08a58', '#9c4a3a', 'gd3')}
+      ${dune('dune--3', `${CREST}V400H0Z`, '#e08a58', '#9c4a3a', 'gd3')}
       ${caravanSilhouette()}
       ${dune('dune--4', 'M0 120C260 40 540 150 860 110S1340 30 1600 90V400H0Z', '#a7543a', '#47211c', 'gd4')}
       <div class="scene__shade"></div>
