@@ -441,6 +441,10 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 .scene--game .scene__shade {
   background: rgb(12 8 8 / 0.62);
 }
+/* Nothing moves behind the game panels: an idle game screen never repaints. */
+.scene--game * {
+  animation: none !important;
+}
 
 /* -------------------------------------------------------------- app shell */
 
@@ -981,7 +985,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   color: var(--text-3);
 }
 .pulse {
-  animation: pulse 2.2s ease-in-out infinite;
+  animation: pulse 2.2s ease-in-out 3;
 }
 @keyframes pulse {
   50% { transform: scale(1.04); }
@@ -1051,7 +1055,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
 }
 .timeline__dot.is-merchant {
   background: var(--violet);
-  animation: pulse 1.4s ease-in-out infinite;
+  animation: pulse 1.4s ease-in-out 4;
 }
 .timeline__caravan {
   position: absolute;
@@ -1094,7 +1098,10 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   width: 54px;
   height: 54px;
   flex: none;
-  animation: coin-bob 4s ease-in-out infinite;
+  transition: transform 0.4s var(--spring);
+}
+.stat--gold:hover .stat__art {
+  transform: rotate(-10deg) scale(1.06);
 }
 @keyframes coin-bob {
   50% { transform: translateY(-3px) rotate(-4deg); }
@@ -1613,7 +1620,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   position: absolute;
   width: 120px;
   height: 120px;
-  animation: float 5s ease-in-out infinite;
+  animation: float 5s ease-in-out 2;
 }
 .savings__coin--1 { left: 30%; top: 30%; width: 140px; height: 140px; }
 .savings__coin--2 { left: 8%; top: 8%; animation-delay: -1.5s; opacity: 0.85; }
@@ -1807,7 +1814,7 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   bottom: -6%;
   width: 82%;
   transform: translateX(-50%);
-  animation: npc 3.5s ease-in-out infinite alternate;
+  animation: npc 3.5s ease-in-out 4 alternate;
 }
 @keyframes npc {
   to { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
