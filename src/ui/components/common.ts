@@ -1,5 +1,4 @@
 import { html, type TemplateResult } from 'lit-html';
-import { img } from '../assets';
 
 export const fmt = (n: number): string => Math.round(n).toLocaleString('en-US');
 export const signed = (n: number): string => (n > 0 ? `+${fmt(n)}` : fmt(n));
@@ -46,8 +45,6 @@ export const num = (value: number): TemplateResult => html`<anim-num value=${val
 /** White pictogram tinted with the current text color (CSS mask). */
 export const glyph = (src: string, cls = ''): TemplateResult =>
   html`<span class="glyph ${cls}" style="--src:url('${src}')" aria-hidden="true"></span>`;
-
-export const coin = (): TemplateResult => html`<img class="coin-icon" src=${img('coin-small')} alt="gold" />`;
 
 /** Button that repeats while held (used by the − / + quantity buttons). */
 export function holdRepeat(fn: () => void): (e: PointerEvent) => void {

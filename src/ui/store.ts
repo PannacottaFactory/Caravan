@@ -4,7 +4,10 @@
 import {
   ACHIEVEMENTS,
   applyAction,
+  capacity,
+  computeStats,
   createGame,
+  weightCarried,
   ERROR_MESSAGES,
   FACTIONS,
   gameUnlocks,
@@ -232,10 +235,38 @@ export function setTab(tab: Tab): void {
 export function changeDraft(kind: 'buy' | 'sell', id: keyof Quantities, delta: number): void {
   const key = kind === 'buy' ? 'buyDraft' : 'sellDraft';
   const draft = { ...state[key] };
-  let next = Math.max(0, (draft[id] ?? 0) + delta);
-  if (kind === 'sell' && state.game) next = Math.min(next, state.game.inventory[id]);
+  const next = Math.min(Math.max(0, (draft[id] ?? 0) + delta), maxQuantity(kind, id));
   draft[id] = next;
   update({ [key]: draft } as Partial<AppState>);
+}
+
+/** Largest quantity of one resource that can be bought/sold with the rest of the draft. */
+export function maxQuantity(kind: 'buy' | 'sell', id: keyof Quantities): number {
+  const g = state.game;
+  if (!g) return 0;
+  if (kind === 'sell') return g.inventory[id];
+  const stats = computeStats(g);
+  let goldLeft = g.gold;
+  let capLeft = capacity(g, stats) - weightCarried(g, stats);
+  for (const [rid, q] of Object.entries(state.buyDraft) as [keyof Quantities, number][]) {
+    if (rid === id || !q) continue;
+    goldLeft -= q * stats.resource[rid].buyPrice;
+    capLeft -= q * stats.resource[rid].unitWeight;
+  }
+  const { buyPrice, unitWeight } = stats.resource[id];
+  const byGold = buyPrice > 0 ? Math.floor(goldLeft / buyPrice) : Infinity;
+  const byWeight = unitWeight > 0 ? Math.floor(capLeft / unitWeight) : Infinity;
+  const max = Math.min(byGold, byWeight);
+  return Math.max(0, Number.isFinite(max) ? max : 99);
+}
+
+/** "Max" button: fills the quantity to the maximum, or resets it if already there. */
+export function toggleMax(kind: 'buy' | 'sell', id: keyof Quantities): void {
+  const key = kind === 'buy' ? 'buyDraft' : 'sellDraft';
+  const max = maxQuantity(kind, id);
+  const current = state[key][id] ?? 0;
+  playSfx('click');
+  update({ [key]: { ...state[key], [id]: current === max ? 0 : max } } as Partial<AppState>);
 }
 
 export function dispatch(action: GameAction): boolean {

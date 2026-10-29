@@ -5,8 +5,10 @@ import {
   computeStats,
   dailyFoodConsumption,
   dailyIncome,
+  ERROR_MESSAGES,
   getFaction,
   getMerchantItem,
+  merchantArrivesTomorrow,
   previewBuy,
   previewSell,
   RESOURCE_IDS,
@@ -14,240 +16,308 @@ import {
   savingAmount,
   weightCarried,
   type GameState,
+  type ResourceId,
   type Stats,
 } from '../../engine';
-import { img, itemIcon, resourceIcon } from '../assets';
-import { coin, fmt, glyph, holdRepeat, num } from '../components/common';
-import { backButton } from '../components/topbar';
+import { itemIcon } from '../assets';
+import { fmt, glyph, holdRepeat, num } from '../components/common';
 import { eventOverlay } from '../components/events';
-import { changeDraft, dispatch, openModal, setTab, state, type Tab } from '../store';
+import { crest, iconButton, segmented } from '../components/ui';
+import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
+import { changeDraft, dispatch, maxQuantity, openModal, setTab, state, toggleMax, type Tab } from '../store';
+import { soundToggle } from './title';
 
-// ------------------------------------------------------------------ HUD
+// ------------------------------------------------------------------ header: journey timeline
 
-function hud(g: GameState, stats: Stats): TemplateResult {
+function timeline(g: GameState): TemplateResult {
+  const days = Array.from({ length: g.maxDay }, (_, i) => i + 1);
+  const progress = g.maxDay > 1 ? (g.day - 1) / (g.maxDay - 1) : 1;
+  const warn = merchantArrivesTomorrow(g);
+  return html`<div class="timeline" style="--progress:${progress}" aria-label="Day ${g.day} of ${g.maxDay}">
+    <div class="timeline__label">
+      <strong>${g.day >= g.maxDay ? 'Last day' : `Day ${g.day}`}</strong><span>of ${g.maxDay}</span>
+    </div>
+    <div class="timeline__track">
+      <div class="timeline__fill"></div>
+      ${days.map(
+        (d) => html`<span class="timeline__dot ${d < g.day ? 'is-past' : ''} ${d === g.day ? 'is-today' : ''}
+          ${warn && d === g.day + 1 ? 'is-merchant' : ''}" title=${warn && d === g.day + 1 ? 'A strange merchant is coming…' : `Day ${d}`}></span>`,
+      )}
+      <span class="timeline__caravan">${camelArt()}</span>
+    </div>
+  </div>`;
+}
+
+// ------------------------------------------------------------------ sidebar stats
+
+function sidebar(g: GameState, stats: Stats): TemplateResult {
   const weight = weightCarried(g, stats);
   const cap = capacity(g, stats);
   const ratio = cap > 0 ? Math.min(1, weight / cap) : 1;
   const lastDay = g.day >= g.maxDay;
-  const food = lastDay ? 0 : dailyFoodConsumption(g, stats);
+  const eat = lastDay ? 0 : dailyFoodConsumption(g, stats);
+  const daysLeft = eat > 0 ? Math.floor(g.inventory.food / eat) : Infinity;
+  const danger = !lastDay && eat > g.inventory.food;
+  const goods = RESOURCE_IDS.filter((id) => id !== 'food' && g.inventory[id] > 0);
 
-  return html`
-    <div class="hud">
-      <div class="hud-card hud-card--gold">
-        <span class="hud-card__label">Gold <img src=${img('coin-small')} alt="" /></span>
-        <strong class="hud-card__value">${num(g.gold)}</strong>
-        <span class="hud-card__sub">(+${fmt(dailyIncome(g, stats))})</span>
-      </div>
-      <div class="hud-card">
-        <span class="hud-card__label">Weight</span>
-        <strong class="hud-card__value hud-card__value--small ${weight > cap ? 'is-over' : ''}">${num(weight)}/${fmt(cap)}</strong>
-        <div class="weight-bar ${ratio > 0.9 ? 'is-full' : ''}"><i style="width:${ratio * 100}%"></i></div>
-      </div>
-      <div class="hud-card">
-        <span class="hud-card__label">Food</span>
-        <strong class="hud-card__value hud-card__value--icon">${num(g.inventory.food)}<img src=${resourceIcon('food')} alt="" /></strong>
-        <span class="hud-card__sub ${!lastDay && food > g.inventory.food ? 'is-danger' : 'is-food'}">(-${food})</span>
-      </div>
-      <div class="hud-card hud-card--crew">
-        <span class="hud-card__label">Crew</span>
-        <span class="crew-line">${num(g.traders)} ${glyph(img('trader'), 'crew-glyph')}</span>
-        <span class="crew-line">${num(g.camels)} ${glyph(img('camel'), 'crew-glyph crew-glyph--camel')}</span>
+  return html`<aside class="game-sidebar">
+    <div class="stat stat--gold">
+      ${coinArt('stat__art')}
+      <div class="stat__body">
+        <span class="stat__label">Gold</span>
+        <strong class="stat__value">${num(g.gold)}</strong>
+        <span class="stat__delta stat__delta--up">${icon('arrowUp')} ${fmt(dailyIncome(g, stats))} per day</span>
       </div>
     </div>
-  `;
+
+    <div class="stat">
+      <span class="stat__icon">${icon('weight')}</span>
+      <div class="stat__body">
+        <span class="stat__label">Cargo</span>
+        <strong class="stat__value stat__value--md ${weight > cap ? 'is-bad' : ''}">${num(weight)}<small> / ${fmt(cap)}</small></strong>
+        <div class="meter ${ratio > 0.9 ? 'is-hot' : ''}"><i style="transform:scaleX(${ratio})"></i></div>
+      </div>
+    </div>
+
+    <div class="stat ${danger ? 'stat--danger' : ''}">
+      <span class="stat__icon stat__icon--art">${resourceArt('food')}</span>
+      <div class="stat__body">
+        <span class="stat__label">Food</span>
+        <strong class="stat__value stat__value--md">${num(g.inventory.food)}</strong>
+        <span class="stat__delta ${danger ? 'stat__delta--bad' : ''}">
+          ${lastDay ? 'No food needed today' : danger ? 'Not enough for tonight!' : `−${eat} per day · ${Number.isFinite(daysLeft) ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : 'no need'}`}
+        </span>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat stat--small">
+        <span class="stat__icon stat__icon--crew">${traderArt()}</span>
+        <div class="stat__body"><span class="stat__label">Traders</span><strong class="stat__value stat__value--md">${num(g.traders)}</strong></div>
+      </div>
+      <div class="stat stat--small">
+        <span class="stat__icon stat__icon--crew">${camelArt()}</span>
+        <div class="stat__body"><span class="stat__label">Camels</span><strong class="stat__value stat__value--md">${num(g.camels)}</strong></div>
+      </div>
+    </div>
+
+    <div class="stat stat--small">
+      <span class="stat__icon">${icon('piggy')}</span>
+      <div class="stat__body"><span class="stat__label">Saving rate</span><strong class="stat__value stat__value--md">${g.savingRate}%</strong></div>
+    </div>
+
+    <div class="inventory">
+      <span class="stat__label">Goods</span>
+      ${goods.length
+        ? html`<ul>${goods.map((id) => html`<li>${resourceArt(id, 'inventory__art')}<span>${RESOURCES[id].name}</span><strong>${g.inventory[id]}</strong></li>`)}</ul>`
+        : html`<p class="muted small">Your caravan carries no goods yet.</p>`}
+    </div>
+  </aside>`;
 }
 
-// ------------------------------------------------------------------ trade tables (buy / sell)
+// ------------------------------------------------------------------ market (buy / sell)
 
-function qtyControl(kind: 'buy' | 'sell', id: (typeof RESOURCE_IDS)[number], value: number): TemplateResult {
-  return html`<div class="qty">
-    <button class="qty__btn qty__btn--minus" aria-label="Less" ?disabled=${value === 0}
-      @pointerdown=${holdRepeat(() => changeDraft(kind, id, -1))}></button>
-    <span class="qty__value">${value}</span>
-    <button class="qty__btn qty__btn--plus" aria-label="More"
-      @pointerdown=${holdRepeat(() => changeDraft(kind, id, 1))}></button>
+function stepper(kind: 'buy' | 'sell', id: ResourceId, value: number): TemplateResult {
+  const max = maxQuantity(kind, id);
+  return html`<div class="stepper">
+    <button class="stepper__btn" aria-label="Less" ?disabled=${value === 0} @pointerdown=${holdRepeat(() => changeDraft(kind, id, -1))}>${icon('minus')}</button>
+    <span class="stepper__value ${value ? 'is-set' : ''}">${value}</span>
+    <button class="stepper__btn" aria-label="More" ?disabled=${value >= max} @pointerdown=${holdRepeat(() => changeDraft(kind, id, 1))}>${icon('plus')}</button>
+    <button class="stepper__max ${value > 0 && value === max ? 'is-on' : ''}" ?disabled=${max === 0} @click=${() => toggleMax(kind, id)}>Max</button>
   </div>`;
 }
 
-function buyPanel(g: GameState, stats: Stats): TemplateResult {
-  const draft = state.buyDraft;
-  const p = previewBuy(g, draft);
-  const goldBad = p.cost > g.gold;
-  const weightBad = p.weight > 0 && weightCarried(g, stats) + p.weight > capacity(g, stats);
-  return html`
-    <div class="trade">
-      <div class="trade__head">
-        <h3 class="pill-title pill-title--blue">Buy</h3>
-        <div class="totals">
-          <span class="total total--blue ${goldBad ? 'is-bad' : ''}">${p.cost ? `-${fmt(p.cost)}` : 0}</span>
-          <span class="total total--gold ${weightBad ? 'is-bad' : ''}">${p.weight ? `+${fmt(p.weight)}` : 0}</span>
-        </div>
-      </div>
-      <div class="trade__table" role="table">
-        <div class="trade__row trade__row--header" role="row">
-          <span></span><span>Owned</span><span>Price</span><span>Weight</span><span>Quantity</span><span>Cost</span><span>Weight</span>
-        </div>
-        ${RESOURCE_IDS.map((id) => {
-          const r = stats.resource[id];
-          const q = draft[id] ?? 0;
-          return html`<div class="trade__row ${q ? 'is-active' : ''}" role="row">
-            <img class="res-icon" src=${resourceIcon(id)} alt=${RESOURCES[id].name} title=${RESOURCES[id].name} />
-            <span class="cell-owned">${g.inventory[id] + q}</span>
-            <span class="cell-price">${fmt(r.buyPrice)}${coin()}</span>
-            <span>${r.unitWeight}</span>
-            ${qtyControl('buy', id, q)}
-            <span class="cell-box cell-box--blue">${fmt(q * r.buyPrice)}</span>
-            <span class="cell-box cell-box--gold">${q * r.unitWeight}</span>
-          </div>`;
-        })}
-      </div>
-      <button class="btn btn--green btn--big trade__go" @click=${() => dispatch({ type: 'buy', quantities: draft })}>Buy now</button>
+function market(kind: 'buy' | 'sell', g: GameState, stats: Stats): TemplateResult {
+  const draft = kind === 'buy' ? state.buyDraft : state.sellDraft;
+  return html`<div class="market">
+    <div class="market__row market__row--head">
+      <span>Goods</span><span>${kind === 'buy' ? 'Price' : 'Sells for'}</span><span>Weight</span><span>Quantity</span><span>${kind === 'buy' ? 'Cost' : 'Earnings'}</span>
     </div>
-  `;
+    ${RESOURCE_IDS.map((id) => {
+      const r = stats.resource[id];
+      const q = draft[id] ?? 0;
+      const price = kind === 'buy' ? r.buyPrice : r.sellPrice;
+      const owned = g.inventory[id];
+      return html`<div class="market__row ${q ? 'is-active' : ''} ${kind === 'sell' && owned === 0 ? 'is-empty' : ''}">
+        <span class="good">
+          ${resourceArt(id, 'good__art')}
+          <span class="good__text"><strong>${RESOURCES[id].name}</strong><small>Owned ${owned}${q ? html` <em>${kind === 'buy' ? '+' : '−'}${q}</em>` : nothing}</small></span>
+        </span>
+        <span class="price">${fmt(price)}${coinArt('price__coin')}</span>
+        <span class="weight">${r.unitWeight}<small>kg</small></span>
+        ${stepper(kind, id, q)}
+        <span class="subtotal ${q ? 'is-set' : ''}">${q ? `${kind === 'buy' ? '−' : '+'}${fmt(q * price)}` : '—'}</span>
+      </div>`;
+    })}
+  </div>`;
 }
 
-function sellPanel(g: GameState, stats: Stats): TemplateResult {
-  const draft = state.sellDraft;
-  const p = previewSell(g, draft);
-  return html`
-    <div class="trade">
-      <div class="trade__head">
-        <h3 class="pill-title pill-title--orange">Sell</h3>
-        <div class="totals">
-          <span class="total total--green">${p.earnings ? `+${fmt(p.earnings)}` : 0}</span>
-          <span class="total total--gold">${p.weight ? `-${fmt(p.weight)}` : 0}</span>
-        </div>
-      </div>
-      <div class="trade__table" role="table">
-        <div class="trade__row trade__row--header" role="row">
-          <span></span><span>Owned</span><span>Price</span><span>Weight</span><span>Quantity</span><span>Earns</span><span>Weight</span>
-        </div>
-        ${RESOURCE_IDS.map((id) => {
-          const r = stats.resource[id];
-          const q = draft[id] ?? 0;
-          return html`<div class="trade__row ${q ? 'is-active' : ''} ${g.inventory[id] === 0 ? 'is-empty' : ''}" role="row">
-            <img class="res-icon" src=${resourceIcon(id)} alt=${RESOURCES[id].name} title=${RESOURCES[id].name} />
-            <span class="cell-owned">${g.inventory[id] - q}</span>
-            <span class="cell-price">${fmt(r.sellPrice)}${coin()}</span>
-            <span>${r.unitWeight}</span>
-            ${qtyControl('sell', id, q)}
-            <span class="cell-box cell-box--green">${fmt(q * r.sellPrice)}</span>
-            <span class="cell-box cell-box--gold">${q ? `-${q * r.unitWeight}` : 0}</span>
-          </div>`;
-        })}
-      </div>
-      ${stats.global.sellBonus ? html`<p class="panel-note">Hand of Midas: +${stats.global.sellBonus} gold on every sale</p>` : nothing}
-      <button class="btn btn--green btn--big trade__go" @click=${() => dispatch({ type: 'sell', quantities: draft })}>Sell now</button>
-    </div>
-  `;
+function marketFooter(kind: 'buy' | 'sell', g: GameState, stats: Stats): TemplateResult {
+  const weight = weightCarried(g, stats);
+  const cap = capacity(g, stats);
+  if (kind === 'buy') {
+    const p = previewBuy(g, state.buyDraft);
+    const empty = p.error === 'nothingToBuy';
+    return actionBar(
+      html`${change('Gold', g.gold, g.gold - p.cost, p.error === 'notEnoughGold')}
+        ${change('Cargo', weight, weight + p.weight, p.error === 'notEnoughCapacity', ` / ${fmt(cap)}`)}`,
+      empty ? 'Select goods to buy' : p.error ? ERROR_MESSAGES[p.error] : null,
+      html`${icon('cart')} Buy`,
+      !p.error,
+      () => dispatch({ type: 'buy', quantities: state.buyDraft }),
+    );
+  }
+  const p = previewSell(g, state.sellDraft);
+  const empty = p.error === 'nothingToSell';
+  return actionBar(
+    html`${change('Gold', g.gold, g.gold + p.earnings, false)} ${change('Cargo', weight, weight - p.weight, false, ` / ${fmt(cap)}`)}
+      ${stats.global.sellBonus ? html`<span class="bonus-chip">${glyph(itemIcon('hand-of-midas'))} +${stats.global.sellBonus} Midas</span>` : nothing}`,
+    empty ? 'Select goods to sell' : p.error ? ERROR_MESSAGES[p.error] : null,
+    html`${icon('coins')} Sell`,
+    !p.error,
+    () => dispatch({ type: 'sell', quantities: state.sellDraft }),
+  );
 }
 
-// ------------------------------------------------------------------ crew & save
+function change(label: string, from: number, to: number, bad: boolean, suffix = ''): TemplateResult {
+  const dir = to > from ? 'up' : to < from ? 'down' : 'same';
+  return html`<span class="change change--${dir} ${bad ? 'is-bad' : ''}">
+    <span class="change__label">${label}</span>
+    <span class="change__values">${fmt(from)}${dir === 'same' ? nothing : html` <span class="change__arrow">→</span> <strong>${fmt(to)}</strong>`}${suffix}</span>
+  </span>`;
+}
 
-function crewPanel(_g: GameState, stats: Stats): TemplateResult {
+function actionBar(summary: TemplateResult, message: string | null, label: TemplateResult, enabled: boolean, onClick: () => void): TemplateResult {
+  return html`<footer class="action-bar">
+    <div class="action-bar__summary">${summary}</div>
+    <div class="action-bar__cta">
+      ${message ? html`<span class="action-bar__msg">${message}</span>` : html`<span class="action-bar__msg action-bar__msg--ok">Ends the day</span>`}
+      <button class="btn btn--primary btn--lg" ?disabled=${!enabled} @click=${onClick}>${label}</button>
+    </div>
+  </footer>`;
+}
+
+// ------------------------------------------------------------------ crew & savings
+
+function crew(g: GameState, stats: Stats): TemplateResult {
   const s = stats.global;
-  return html`
-    <div class="crew">
-      <h3 class="pill-title pill-title--sand">Manage your crew</h3>
-      <div class="crew__choices">
-        <div class="crew-choice">
-          <div class="crew-choice__circle">${glyph(img('trader'), 'crew-choice__glyph')}<span class="plus">+</span></div>
-          <div class="crew-choice__cost">${s.traderCost} ${coin()}</div>
-          <p>Recruit a trader to earn <strong>${s.traderIncome}</strong> gold everyday</p>
-          <button class="btn btn--green" @click=${() => dispatch({ type: 'recruit' })}>Recruit</button>
-        </div>
-        <div class="crew__or">OR</div>
-        <div class="crew-choice">
-          <div class="crew-choice__circle">${glyph(img('camel'), 'crew-choice__glyph crew-choice__glyph--camel')}<span class="plus">+</span></div>
-          <div class="crew-choice__cost">${s.camelCost} ${coin()}</div>
-          <p>Add a camel to increase your maximum weight by <strong>${s.camelLoad}</strong></p>
-          <button class="btn btn--green" @click=${() => dispatch({ type: 'addCamel' })}>Add</button>
-        </div>
-      </div>
-      <p class="panel-note panel-note--warn">Info : traders and camels each consume ${s.traderFood === s.camelFood ? s.traderFood : 'some'} food per day</p>
-    </div>
-  `;
+  const option = (art: TemplateResult, title: string, text: TemplateResult, facts: TemplateResult, cost: number, label: string, onClick: () => void) =>
+    html`<div class="choice">
+      <div class="choice__art">${art}</div>
+      <h3 class="choice__title">${title}</h3>
+      <p class="choice__text">${text}</p>
+      <ul class="choice__facts">${facts}</ul>
+      <button class="btn btn--primary btn--lg btn--block" ?disabled=${g.gold < cost} @click=${onClick}>
+        ${label} · ${cost} ${coinArt('btn__coin')}
+      </button>
+    </div>`;
+  return html`<div class="choices">
+    ${option(
+      traderArt(),
+      'Hire a trader',
+      html`Traders earn gold for you every single day.`,
+      html`<li>${icon('arrowUp')} +${s.traderIncome} gold per day</li><li>${icon('food')} Eats ${s.traderFood} food per day</li>
+        ${s.savingPerRecruit ? html`<li>${icon('piggy')} +${s.savingPerRecruit}% saving rate</li>` : nothing}`,
+      s.traderCost,
+      'Hire',
+      () => dispatch({ type: 'recruit' }),
+    )}
+    <span class="choices__or">or</span>
+    ${option(
+      camelArt(),
+      'Buy a camel',
+      html`Camels carry your goods across the desert.`,
+      html`<li>${icon('weight')} +${s.camelLoad} cargo capacity</li><li>${icon('food')} Eats ${s.camelFood} food per day</li>`,
+      s.camelCost,
+      'Buy',
+      () => dispatch({ type: 'addCamel' }),
+    )}
+  </div>`;
 }
 
-function savePanel(g: GameState, stats: Stats): TemplateResult {
+function savings(g: GameState, stats: Stats): TemplateResult {
+  const amount = savingAmount(g);
   const next = Math.max(10, g.savingRate - stats.global.savingDecay);
-  return html`
-    <div class="save">
-      <h3 class="pill-title pill-title--gold">Save your gold</h3>
-      <div class="save__body">
-        <img class="save__coin" src=${img('coin')} alt="" />
-        <p class="save__rate">Earn <strong>${g.savingRate}%</strong> of your current gold</p>
-        <p class="save__amount">+${num(savingAmount(g))} ${coin()}</p>
-        <p class="panel-note">
-          ${stats.global.savingDecay === 0 ? 'Your saving rate never decreases.' : `After saving, your rate drops to ${next}%.`}
-        </p>
-      </div>
-      <div class="save__actions">
+  return html`<div class="savings">
+    <div class="savings__visual">
+      ${coinArt('savings__coin savings__coin--3')} ${coinArt('savings__coin savings__coin--2')} ${coinArt('savings__coin savings__coin--1')}
+    </div>
+    <div class="savings__text">
+      <p class="savings__rate"><strong>${g.savingRate}%</strong> of your gold</p>
+      <p class="savings__amount">+${num(amount)}</p>
+      <p class="muted">
+        ${stats.global.savingDecay === 0 ? 'Your saving rate never decreases.' : html`The rate then drops to <strong>${next}%</strong>. Save while it's high — or once you're rich.`}
+      </p>
+      <div class="savings__actions">
+        <button class="btn btn--primary btn--lg" @click=${() => dispatch({ type: 'save' })}>${icon('piggy')} Save · +${fmt(amount)}</button>
         ${g.saveOnceAvailable
-          ? html`<button class="btn btn--gold" @click=${() => dispatch({ type: 'saveOnce' })} title="Sanctifan: free save, no day spent">
-              Save once (free)
+          ? html`<button class="btn btn--secondary btn--lg" @click=${() => dispatch({ type: 'saveOnce' })} title="Sanctifan: free save, no day spent">
+              ${icon('sparkle')} Free save (once)
             </button>`
           : nothing}
-        <button class="btn btn--green btn--big" @click=${() => dispatch({ type: 'save' })}>Save</button>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
 // ------------------------------------------------------------------ screen
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'buy', label: 'Buy' },
-  { id: 'sell', label: 'Sell' },
-  { id: 'crew', label: 'Crew' },
-  { id: 'save', label: 'Save gold' },
-];
-
 export function gameScreen(): TemplateResult {
   const g = state.game!;
   const stats = computeStats(g);
-  const lastDay = g.day >= g.maxDay;
-  const panels: Record<Tab, () => TemplateResult> = {
-    buy: () => buyPanel(g, stats),
-    sell: () => sellPanel(g, stats),
-    crew: () => crewPanel(g, stats),
-    save: () => savePanel(g, stats),
+  const faction = getFaction(g.factionId);
+
+  const body: Record<Tab, () => TemplateResult> = {
+    buy: () => html`${market('buy', g, stats)}${marketFooter('buy', g, stats)}`,
+    sell: () => html`${market('sell', g, stats)}${marketFooter('sell', g, stats)}`,
+    crew: () => crew(g, stats),
+    save: () => savings(g, stats),
   };
 
   return html`
     <section class="screen game-screen">
-      <header class="game-top">
-        ${backButton(() => openModal('menu'), 'Menu')}
-        <h2 class="day-title">${lastDay ? 'Last day !' : html`Day ${g.day}/${g.maxDay}`}</h2>
-        <div class="game-top__right">
+      <header class="game-header">
+        <div class="game-header__left">
+          ${iconButton('menu', 'Menu', () => openModal('menu'))}
+          <div class="game-header__faction">
+            ${crest(g.factionId, 'crest--sm')}
+            <span><strong>${faction.name}</strong><small>${g.mode === 'classical' ? 'Classical' : 'Traveler'}</small></span>
+          </div>
+        </div>
+        ${timeline(g)}
+        <div class="game-header__right">
           ${g.canCallMerchant
-            ? html`<button class="chip-btn" @click=${() => dispatch({ type: 'callMerchant' })}>
-                <img src=${img('merchant')} alt="" /> Call the merchant
-              </button>`
+            ? html`<button class="btn btn--secondary btn--sm pulse" @click=${() => dispatch({ type: 'callMerchant' })}>${icon('sparkle')} Call the merchant</button>`
             : nothing}
           ${g.merchantItem
-            ? html`<button class="chip-btn chip-btn--item" @click=${() => openModal('item')} title=${getMerchantItem(g.merchantItem).name}>
-                ${glyph(itemIcon(g.merchantItem), 'chip-glyph')}
-              </button>`
+            ? html`<button class="icon-btn icon-btn--item" @click=${() => openModal('item')} title=${getMerchantItem(g.merchantItem).name}
+                aria-label="Your artifact">${glyph(itemIcon(g.merchantItem))}</button>`
             : nothing}
-          <span class="faction-badge">${getFaction(g.factionId).name}</span>
+          ${soundToggle()}
         </div>
       </header>
 
-      ${hud(g, stats)}
+      ${sidebar(g, stats)}
 
-      <div class="game-body">
-        <nav class="tabs" aria-label="Actions">
-          ${TABS.map(
-            (t) => html`<button class="tab ${state.tab === t.id ? 'is-active' : ''}" aria-pressed=${state.tab === t.id} @click=${() => setTab(t.id)}>
-              ${t.label}
-            </button>`,
-          )}
-        </nav>
-        <div class="panel action-panel">${keyed(state.tab, html`<div class="panel-anim">${panels[state.tab]()}</div>`)}</div>
-      </div>
+      <main class="card game-main">
+        ${segmented(
+          [
+            { id: 'buy', label: 'Buy', icon: 'cart' },
+            { id: 'sell', label: 'Sell', icon: 'coins' },
+            { id: 'crew', label: 'Crew', icon: 'users' },
+            { id: 'save', label: 'Save gold', icon: 'piggy' },
+          ],
+          state.tab,
+          setTab,
+          'segmented--tabs',
+        )}
+        ${keyed(state.tab, html`<div class="game-main__panel">${body[state.tab]()}</div>`)}
+      </main>
 
-      ${keyed(state.dayBanner, html`<div class="day-banner" aria-live="polite"><span>${lastDay ? 'Last day !' : `Day ${g.day}`}</span></div>`)}
+      ${keyed(
+        state.dayBanner,
+        html`<div class="day-banner" aria-live="polite"><span class="day-banner__line"></span><span class="day-banner__text">${g.day >= g.maxDay ? 'Last day' : `Day ${g.day}`}</span><span class="day-banner__line"></span></div>`,
+      )}
       ${eventOverlay(g, stats)}
     </section>
   `;

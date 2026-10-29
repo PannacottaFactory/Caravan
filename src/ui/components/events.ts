@@ -12,14 +12,27 @@ import {
   type GameState,
   type Stats,
 } from '../../engine';
-import { img, itemIcon, powerIcon, resourceIcon } from '../assets';
-import { coin, fmt, glyph, num } from './common';
+import { img, itemIcon, powerIcon } from '../assets';
+import { camelArt, coinArt, icon, resourceArt, traderArt } from '../icons';
+import { fmt, glyph, num } from './common';
+import { crest } from './ui';
 import { backToMenu, dispatch, retryDay, shareScore, startGame, state, update } from '../store';
 
-function overlay(kind: string, content: TemplateResult): TemplateResult {
+function dialog(kind: string, content: TemplateResult): TemplateResult {
   return html`<div class="overlay overlay--${kind}" role="dialog" aria-modal="true">
-    <div class="overlay__card">${content}</div>
+    <div class="dialog dialog--${kind}">${content}</div>
   </div>`;
+}
+
+function npcHeader(portrait: string, eyebrow: string, title: string, quote: string): TemplateResult {
+  return html`<header class="npc">
+    <div class="npc__portrait"><img src=${portrait} alt="" /></div>
+    <div>
+      <p class="dialog__eyebrow">${eyebrow}</p>
+      <h3 class="dialog__title">${title}</h3>
+      <p class="npc__quote">“${quote}”</p>
+    </div>
+  </header>`;
 }
 
 // ------------------------------------------------------------------ Mysterious Merchant
@@ -28,31 +41,37 @@ function merchant(g: GameState, stats: Stats): TemplateResult {
   const sel = MERCHANT_ITEMS.find((i) => i.id === state.merchantChoice) ?? MERCHANT_ITEMS[0]!;
   const price = merchantPrice(sel.basePrice, stats);
   const affordable = g.gold >= price;
-  return overlay(
+  return dialog(
     'merchant',
     html`
-      <img class="npc-portrait" src=${img('merchant')} alt="The mysterious merchant" />
-      <h3 class="ribbon ribbon--purple">A strange merchant appears …</h3>
-      <p class="npc-quote">“ Good evening traveler. You may be interested by some of my special products. Take your time… Hehehe… ”</p>
-      <div class="pick-list" role="listbox">
-        ${MERCHANT_ITEMS.map((item) => {
-          const p = merchantPrice(item.basePrice, stats);
-          const active = item.id === sel.id;
-          return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''} ${g.gold < p ? 'is-poor' : ''}"
-            @click=${() => update({ merchantChoice: item.id })}>
-            ${glyph(itemIcon(item.id), 'pick__glyph')}
-            <span class="pick__name">${item.name}</span>
-            <span class="price-pill">${p} ${coin()}</span>
-          </button>`;
-        })}
+      ${npcHeader(img('merchant'), 'A strange merchant appears…', 'The Mysterious Merchant',
+        'Good evening traveler. You may be interested by some of my special products. Take your time… Hehehe…')}
+      <div class="dialog__body dialog__body--split">
+        <div class="pick-grid" role="listbox" aria-label="Artifacts">
+          ${MERCHANT_ITEMS.map((item) => {
+            const p = merchantPrice(item.basePrice, stats);
+            const active = item.id === sel.id;
+            return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''} ${g.gold < p ? 'is-poor' : ''}"
+              @click=${() => update({ merchantChoice: item.id })}>
+              <span class="pick__icon">${glyph(itemIcon(item.id))}</span>
+              <span class="pick__name">${item.name}</span>
+              <span class="pick__price">${p}${coinArt('pick__coin')}</span>
+            </button>`;
+          })}
+        </div>
+        <div class="pick-detail">
+          <span class="pick-detail__icon">${glyph(itemIcon(sel.id))}</span>
+          <h4>${sel.name}</h4>
+          <p>${sel.description}</p>
+          <p class="pick-detail__price">${price}${coinArt('pick__coin')} <small>you have ${fmt(g.gold)}</small></p>
+        </div>
       </div>
-      <p class="pick-effect"><strong>Effect :</strong> ${sel.description}</p>
-      <div class="overlay__actions">
-        <button class="btn btn--red" @click=${() => dispatch({ type: 'leaveMerchant' })}>Leave</button>
-        <button class="btn btn--green" ?disabled=${!affordable} @click=${() => dispatch({ type: 'buyMerchantItem', itemId: sel.id })}>
-          ${affordable ? 'Buy' : 'Not enough gold'}
+      <footer class="dialog__actions">
+        <button class="btn btn--ghost btn--lg" @click=${() => dispatch({ type: 'leaveMerchant' })}>Leave</button>
+        <button class="btn btn--primary btn--lg" ?disabled=${!affordable} @click=${() => dispatch({ type: 'buyMerchantItem', itemId: sel.id })}>
+          ${affordable ? html`Buy ${sel.name}` : 'Not enough gold'}
         </button>
-      </div>
+      </footer>
     `,
   );
 }
@@ -61,29 +80,34 @@ function merchant(g: GameState, stats: Stats): TemplateResult {
 
 function witch(): TemplateResult {
   const sel = WITCH_POWERS.find((p) => p.id === state.witchChoice) ?? WITCH_POWERS[0]!;
-  return overlay(
+  return dialog(
     'witch',
     html`
-      <img class="npc-portrait" src=${img('witch')} alt="The old witch" />
-      <h3 class="ribbon ribbon--olive">An old witch comes close to you</h3>
-      <p class="npc-quote">I have watched you traveler. You seem to like gold. But you must learn that every success requires a sacrifice … Hehehe …</p>
-      <div class="pick-list" role="listbox">
-        ${WITCH_POWERS.map((p) => {
-          const active = p.id === sel.id;
-          return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''}" @click=${() => update({ witchChoice: p.id })}>
-            ${glyph(powerIcon(p.id), 'pick__glyph')}
-            <span class="pick__name">${p.name}</span>
-          </button>`;
-        })}
+      ${npcHeader(img('witch'), 'An old witch comes close to you', 'The Old Witch',
+        'I have watched you traveler. You seem to like gold. But you must learn that every success requires a sacrifice… Hehehe…')}
+      <div class="dialog__body dialog__body--split">
+        <div class="pick-grid" role="listbox" aria-label="Powers">
+          ${WITCH_POWERS.map((p) => {
+            const active = p.id === sel.id;
+            return html`<button role="option" aria-selected=${active} class="pick ${active ? 'is-active' : ''}" @click=${() => update({ witchChoice: p.id })}>
+              <span class="pick__icon">${glyph(powerIcon(p.id))}</span>
+              <span class="pick__name">${p.name}</span>
+            </button>`;
+          })}
+        </div>
+        <div class="pick-detail">
+          <span class="pick-detail__icon">${glyph(powerIcon(sel.id))}</span>
+          <h4>${sel.name}</h4>
+          <div class="tradeoff">
+            <p class="tradeoff__gain">${icon('arrowUp')} ${sel.bonus}</p>
+            <p class="tradeoff__cost">${icon('arrowDown')} ${sel.malus}</p>
+          </div>
+        </div>
       </div>
-      <div class="bonus-malus">
-        <div class="bonus">${sel.bonus}</div>
-        <span class="bonus-malus__plus">+</span>
-        <div class="malus">${sel.malus}</div>
-      </div>
-      <div class="overlay__actions">
-        <button class="btn btn--green" @click=${() => dispatch({ type: 'chooseWitchPower', powerId: sel.id })}>Choose</button>
-      </div>
+      <footer class="dialog__actions">
+        <span class="muted small">You must choose one.</span>
+        <button class="btn btn--primary btn--lg" @click=${() => dispatch({ type: 'chooseWitchPower', powerId: sel.id })}>Accept ${sel.name}</button>
+      </footer>
     `,
   );
 }
@@ -92,15 +116,17 @@ function witch(): TemplateResult {
 
 function disaster(g: GameState): TemplateResult {
   const d = getDisaster(g.disaster!);
-  return overlay(
+  return dialog(
     'disaster',
     html`
-      <h3 class="ribbon ribbon--red">Disaster !</h3>
-      <p class="npc-quote">${d.description}</p>
-      <div class="malus malus--big">${d.effectText}</div>
-      <div class="overlay__actions">
-        <button class="btn btn--sand" @click=${() => dispatch({ type: 'acknowledgeDisaster' })}>Continue</button>
-      </div>
+      <div class="alert-icon">${icon('warning')}</div>
+      <p class="dialog__eyebrow">Disaster</p>
+      <h3 class="dialog__title">Bad news, traveler</h3>
+      <p class="dialog__text">${d.description}</p>
+      <p class="tradeoff__cost tradeoff__cost--big">${icon('arrowDown')} ${d.effectText}</p>
+      <footer class="dialog__actions dialog__actions--center">
+        <button class="btn btn--primary btn--lg" @click=${() => dispatch({ type: 'acknowledgeDisaster' })}>Continue</button>
+      </footer>
     `,
   );
 }
@@ -108,16 +134,18 @@ function disaster(g: GameState): TemplateResult {
 // ------------------------------------------------------------------ Defeat
 
 function defeat(): TemplateResult {
-  return overlay(
+  return dialog(
     'defeat',
     html`
-      <h3 class="end-title end-title--defeat">Defeat</h3>
-      <p class="end-text">Your caravan ran out of food… Your traders and camels starved in the desert.</p>
-      <p class="end-hint">Info : your traders and camels consume food every day. Anticipate !</p>
-      <div class="overlay__actions overlay__actions--column">
-        <button class="btn btn--green btn--big" @click=${retryDay}>Try this day again</button>
-        <button class="btn btn--ghost" @click=${backToMenu}>Menu</button>
-      </div>
+      <div class="alert-icon alert-icon--bad">${icon('skull')}</div>
+      <p class="dialog__eyebrow">Defeat</p>
+      <h3 class="dialog__title">Your caravan starved</h3>
+      <p class="dialog__text">Your traders and camels ran out of food in the middle of the desert.</p>
+      <p class="muted small">Traders and camels eat every day. Always keep enough food for tonight!</p>
+      <footer class="dialog__actions dialog__actions--center">
+        <button class="btn btn--ghost btn--lg" @click=${backToMenu}>Menu</button>
+        <button class="btn btn--primary btn--lg" @click=${retryDay}>${icon('refresh')} Try this day again</button>
+      </footer>
     `,
   );
 }
@@ -144,47 +172,52 @@ function victory(g: GameState): TemplateResult {
   const s = g.score!;
   const r = state.lastResult;
   const punchline = PUNCHLINES[Math.abs(g.seed) % PUNCHLINES.length];
-  const row = (icon: TemplateResult, count: number, unit: number, value: number) =>
-    html`<li>${icon}<span class="score-mul">x ${fmt(unit)}</span><span class="score-count">(${count})</span><strong>${fmt(value)}</strong></li>`;
+  let i = 0;
+  const row = (art: TemplateResult, label: string, count: number, unit: number, value: number) =>
+    html`<li style="--d:${i++}">
+      <span class="score__art">${art}</span><span class="score__label">${label}<small>${count} × ${fmt(unit)}</small></span>
+      <strong>${fmt(value)}</strong>
+    </li>`;
 
-  return overlay(
+  return dialog(
     'victory',
     html`
-      <div class="confetti" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => html`<i style="--i:${i}"></i>`)}</div>
-      <h3 class="end-title end-title--victory">Victory</h3>
-      <p class="end-text">You won, but now the real question is : was it enough?</p>
-      <div class="victory-grid">
-        <div>
-          <p class="victory-meta">Faction : <strong>${getFaction(g.factionId).name}</strong></p>
-          <p class="victory-meta">Difficulty : <strong>${g.mode === 'classical' ? 'Classical' : 'Traveler'}</strong></p>
-          <ul class="score-list">
-            ${row(glyph(img('trader'), 'score-glyph'), g.traders, CREW_POINTS.trader, s.traders)}
-            ${row(glyph(img('camel'), 'score-glyph score-glyph--camel'), g.camels, CREW_POINTS.camel, s.camels)}
-            ${RESOURCE_IDS.filter((id) => id !== 'food').map((id) =>
-              row(html`<img src=${resourceIcon(id)} alt=${RESOURCES[id].name} />`, g.inventory[id], RESOURCES[id].points, s.resources[id]),
-            )}
-            ${s.statuette ? row(glyph(itemIcon('wooden-statuette'), 'score-glyph'), g.traders + g.camels, 500, s.statuette) : nothing}
-            <li class="score-gold">${coin()}<span class="score-mul">x 1</span><span></span><strong>${fmt(s.gold)}</strong></li>
-          </ul>
-        </div>
-        <div class="victory-side">
+      <div class="confetti" aria-hidden="true">${Array.from({ length: 24 }, (_, k) => html`<i style="--i:${k}"></i>`)}</div>
+      <div class="victory">
+        <div class="victory__side">
+          ${crest(g.factionId, 'crest--lg')}
+          <p class="dialog__eyebrow">Journey complete</p>
+          <h3 class="victory__title">Victory</h3>
+          <p class="muted">${getFaction(g.factionId).name} · ${g.mode === 'classical' ? 'Classical' : 'Traveler'}</p>
+          <div class="victory__total">
+            <span>Total score</span>
+            <strong>${num(s.total)}</strong>
+            ${r?.newRecord ? html`<span class="record-badge">${icon('crown')} New record</span>` : nothing}
+          </div>
           <p class="punchline">${punchline}</p>
-          ${r?.newRecord ? html`<p class="new-record">New record!</p>` : nothing}
-          ${r?.newlyUnlockedFactions.length
-            ? html`<p class="unlocked">Unlocked : ${r.newlyUnlockedFactions.map((id) => getFaction(id).name).join(', ')}</p>`
-            : nothing}
-          ${r?.newAchievements.length
-            ? html`<ul class="new-achievements">
-                ${r.newAchievements.map((id) => html`<li>🏆 ${ACHIEVEMENTS.find((x) => x.id === id)?.name ?? id}</li>`)}
-              </ul>`
-            : nothing}
         </div>
-      </div>
-      <div class="total-bar">Total : ${num(s.total)}</div>
-      <div class="overlay__actions">
-        <button class="btn btn--ghost" @click=${backToMenu}>Menu</button>
-        <button class="btn btn--sand" @click=${shareScore}><img class="btn-icon" src=${img('share')} alt="" /> Share</button>
-        <button class="btn btn--green" @click=${startGame}>Play again</button>
+        <div class="victory__main">
+          <ul class="score">
+            ${row(coinArt(), 'Gold', s.gold, 1, s.gold)}
+            ${row(html`<span class="score__crew">${traderArt()}</span>`, 'Traders', g.traders, CREW_POINTS.trader, s.traders)}
+            ${row(html`<span class="score__crew">${camelArt()}</span>`, 'Camels', g.camels, CREW_POINTS.camel, s.camels)}
+            ${RESOURCE_IDS.filter((id) => id !== 'food' && g.inventory[id] > 0).map((id) =>
+              row(resourceArt(id), RESOURCES[id].name, g.inventory[id], RESOURCES[id].points, s.resources[id]),
+            )}
+            ${s.statuette ? row(glyph(itemIcon('wooden-statuette')), 'Wooden statuette', g.traders + g.camels, 500, s.statuette) : nothing}
+          </ul>
+          ${r?.newlyUnlockedFactions.length || r?.newAchievements.length
+            ? html`<div class="unlocks">
+                ${r.newlyUnlockedFactions.map((id) => html`<span class="unlock-chip">${crest(id, 'crest--xs')} ${getFaction(id).name} unlocked</span>`)}
+                ${r.newAchievements.map((id) => html`<span class="unlock-chip unlock-chip--gold">${icon('trophy')} ${ACHIEVEMENTS.find((x) => x.id === id)?.name ?? id}</span>`)}
+              </div>`
+            : nothing}
+          <footer class="dialog__actions">
+            <button class="btn btn--ghost btn--lg" @click=${backToMenu}>Menu</button>
+            <button class="btn btn--secondary btn--lg" @click=${shareScore}>${icon('share')} Share</button>
+            <button class="btn btn--primary btn--lg" @click=${startGame}>${icon('refresh')} Play again</button>
+          </footer>
+        </div>
       </div>
     `,
   );

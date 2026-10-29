@@ -1,7 +1,8 @@
 import { html, render } from 'lit-html';
 import { keyed } from 'lit-html/directives/keyed.js';
-import { backdrop } from './components/backdrop';
+import { scene } from './components/scene';
 import { modalLayer } from './components/modals';
+import { artDefs, icon } from './icons';
 import { unlockAudio } from './audio';
 import { factionScreen } from './screens/factions';
 import { gameScreen } from './screens/game';
@@ -22,13 +23,16 @@ function currentScreen() {
   }
 }
 
+const TOAST_ICON = { error: 'warning', info: 'info', success: 'trophy' } as const;
+
 function view() {
   return html`
-    ${backdrop(state.screen === 'game')}
-    <main class="app">${keyed(state.screen, currentScreen())}</main>
+    ${artDefs()}
+    ${scene(state.screen === 'title' ? 'hero' : 'game')}
+    <main class="app app--${state.screen}">${keyed(state.screen, currentScreen())}</main>
     ${modalLayer()}
     <div class="toasts" aria-live="polite">
-      ${state.toasts.map((t) => html`<div class="toast toast--${t.kind}">${t.text}</div>`)}
+      ${state.toasts.map((t) => html`<div class="toast toast--${t.kind}">${icon(TOAST_ICON[t.kind])}<span>${t.text}</span></div>`)}
     </div>
   `;
 }
