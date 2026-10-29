@@ -74,8 +74,8 @@ export function factionScreen(): TemplateResult {
                 <button role="option" aria-selected=${i === state.factionIndex}
                   class="faction-item ${i === state.factionIndex ? 'is-active' : ''} ${open ? '' : 'is-locked'}"
                   @click=${() => selectFaction(i)}>
-                  ${seen ? crest(x.id, 'crest--sm') : html`<span class="crest-placeholder crest-placeholder--sm">${icon('lock')}</span>`}
-                  <span class="faction-item__name">${seen ? x.name : 'Unknown faction'}</span>
+                  <span class="crest-chip ${seen ? '' : 'is-locked'}">${crest(x.id, 'crest--sm')}</span>
+                  <span class="faction-item__name">${x.name}</span>
                   <span class="faction-item__score">${open ? (score ? fmt(score) : '—') : icon('lock')}</span>
                 </button>
               </li>`;
@@ -87,10 +87,10 @@ export function factionScreen(): TemplateResult {
           `${f.id}-${state.mode}`,
           html`<article class="card faction-detail">
             <div class="faction-detail__head">
-              ${known ? crest(f.id, 'crest--lg') : html`<span class="crest-placeholder crest-placeholder--lg">${icon('lock')}</span>`}
+              <span class="crest-chip ${known ? '' : 'is-locked'}">${crest(f.id, 'crest--lg')}</span>
               <div>
                 <p class="faction-detail__index">Faction ${state.factionIndex + 1} of ${FACTIONS.length}</p>
-                <h3 class="faction-detail__name">${known ? f.name : 'Unknown faction'}</h3>
+                <h3 class="faction-detail__name">${f.name}</h3>
                 <div class="faction-detail__scores">
                   <span>${icon('trophy')} Classical <strong>${fmt(bestScore(p, f.id, 'classical'))}</strong></span>
                   <span>${icon('trophy')} Traveler <strong>${fmt(bestScore(p, f.id, 'traveler'))}</strong></span>
@@ -98,7 +98,7 @@ export function factionScreen(): TemplateResult {
               </div>
             </div>
 
-            <p class="faction-detail__history">${known ? f.history : 'Who knows what this faction hides? Prove your worth to discover it.'}</p>
+            <p class="faction-detail__history">${f.history}</p>
 
             <div class="effect-box ${playable ? '' : 'is-locked'}">
               <span class="effect-box__label">${icon('sparkle')} Faction effect</span>

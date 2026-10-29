@@ -6,10 +6,8 @@ import { brand, icon } from '../icons';
 import { continueGame, newGameFromTitle, openModal, state, toggleSound } from '../store';
 
 const SOCIALS = [
-  { name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/thepannacottafactory/' },
   { name: 'Twitter', icon: 'twitter', url: 'https://twitter.com/Victoriio' },
   { name: 'Discord', icon: 'discord', url: 'https://discord.gg/A2uHcxE' },
-  { name: 'Reddit', icon: 'reddit', url: 'https://www.reddit.com/r/CaravanTradingGame/' },
 ] as const;
 
 export function soundToggle(): TemplateResult {
@@ -63,10 +61,8 @@ export function titleScreen(): TemplateResult {
             <div class="progress-stat"><strong>${p.achievements.length}<small>/${ACHIEVEMENTS.length}</small></strong><span>Achievements</span></div>
           </div>
           <div class="crest-row">
-            ${FACTIONS.slice(0, 11).map((f) =>
-              isFactionUnlocked(p, f.id)
-                ? crest(f.id, 'crest--mini')
-                : html`<span class="crest-placeholder" title="Locked">${icon('lock')}</span>`,
+            ${FACTIONS.map(
+              (f) => html`<span class="crest-chip ${isFactionUnlocked(p, f.id) ? '' : 'is-locked'}" title=${f.name}>${crest(f.id, 'crest--mini')}</span>`,
             )}
           </div>
           <div class="hero__card-actions">

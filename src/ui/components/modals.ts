@@ -60,7 +60,7 @@ const records = () =>
         ${FACTIONS.map((f) => {
           const open = isFactionUnlocked(state.profile, f.id);
           return html`<tr class=${open ? '' : 'is-locked'}>
-            <td><span class="records__faction">${open ? crest(f.id, 'crest--xs') : icon('lock')} ${open ? f.name : 'Unknown faction'}</span></td>
+            <td><span class="records__faction"><span class="crest-chip ${open ? '' : 'is-locked'}">${crest(f.id, 'crest--xs')}</span> ${f.name} ${open ? '' : icon('lock')}</span></td>
             <td>${score(bestScore(state.profile, f.id, 'classical'))}</td>
             <td>${score(bestScore(state.profile, f.id, 'traveler'))}</td>
           </tr>`;

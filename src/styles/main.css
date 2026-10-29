@@ -380,12 +380,9 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   inset: 0 0 auto 0;
   width: 100%;
   height: 45%;
-  opacity: 0.75;
-  animation: twinkle 7s ease-in-out infinite alternate;
-  will-change: opacity;
-}
-@keyframes twinkle {
-  to { opacity: 0.35; }
+  /* Static on purpose: animating the opacity of this full-width SVG makes Firefox
+     repaint the whole screen every frame. */
+  opacity: 0.6;
 }
 .scene__sun {
   position: absolute;
@@ -403,20 +400,16 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   to { transform: translateY(-1.5vh) scale(1.04); }
 }
 .dune {
+  /* Static: moving these large SVGs costs a lot in Firefox. */
   position: absolute;
-  left: -3%;
+  left: 0;
   bottom: 0;
-  width: 106%;
-  will-change: transform;
+  width: 100%;
 }
-.dune--1 { height: 54vh; animation: sway 46s ease-in-out infinite alternate; }
-.dune--2 { height: 43vh; animation: sway 34s ease-in-out infinite alternate-reverse; }
+.dune--1 { height: 54vh; }
+.dune--2 { height: 43vh; }
 .dune--3 { height: 31vh; }
 .dune--4 { height: 17vh; }
-@keyframes sway {
-  from { transform: translate3d(-1.2%, 0, 0); }
-  to { transform: translate3d(1.2%, 0, 0); }
-}
 .caravan {
   position: absolute;
   left: 0;
@@ -1171,10 +1164,28 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
   color: var(--red);
   font-weight: 650;
 }
-.stat-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.stat--crew {
   gap: 10px;
+}
+.crew-half {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.crew-divider {
+  align-self: stretch;
+  width: 1px;
+  background: var(--line-2);
+}
+.crest-chip {
+  display: inline-flex;
+  flex: none;
+}
+.crest-chip.is-locked {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.7;
 }
 .stat--small {
   padding: 12px 14px;
@@ -2392,9 +2403,6 @@ anim-num.num-down { animation: num-down 0.8s var(--ease); }
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: visible;
-  }
-  .stat-row {
-    display: contents;
   }
   .game-main,
   .game-sidebar,

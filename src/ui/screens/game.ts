@@ -85,17 +85,20 @@ function sidebar(g: GameState, stats: Stats): TemplateResult {
         <span class="stat__label">Food</span>
         <strong class="stat__value stat__value--md">${num(g.inventory.food)}</strong>
         <span class="stat__delta ${danger ? 'stat__delta--bad' : ''}">
-          ${lastDay ? 'No food needed today' : danger ? 'Not enough for tonight!' : `−${eat} per day · ${Number.isFinite(daysLeft) ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : 'no need'}`}
+          ${lastDay
+            ? 'No food needed today'
+            : `−${eat} per day · ${danger ? 'not enough for tonight!' : Number.isFinite(daysLeft) ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : 'no need'}`}
         </span>
       </div>
     </div>
 
-    <div class="stat-row">
-      <div class="stat stat--small">
+    <div class="stat stat--crew">
+      <div class="crew-half">
         <span class="stat__icon stat__icon--crew">${traderArt()}</span>
         <div class="stat__body"><span class="stat__label">Traders</span><strong class="stat__value stat__value--md">${num(g.traders)}</strong></div>
       </div>
-      <div class="stat stat--small">
+      <span class="crew-divider"></span>
+      <div class="crew-half">
         <span class="stat__icon stat__icon--crew">${camelArt()}</span>
         <div class="stat__body"><span class="stat__label">Camels</span><strong class="stat__value stat__value--md">${num(g.camels)}</strong></div>
       </div>
