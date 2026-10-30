@@ -4,13 +4,75 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#140e0c" />
-    <meta name="description" content="Caravan — a turn-based trading game. Buy, sell, profit." />
-    <title>Caravan</title>
+    <title>Caravan Trading Game – Free browser trading game</title>
+    <meta
+      name="description"
+      content="Lead a desert caravan: buy low, sell high, feed your camels and survive disasters. A free turn-based trading game in your browser, with 22 factions and a daily challenge."
+    />
+    <meta name="google-site-verification" content="-UEHVb87Ptt4ctwCaY-khcHoxZH4W4uGsPKeg71xpuc" />
+    <link rel="canonical" href="https://pannacottafactory.github.io/Caravan/" />
     <link rel="icon" type="image/png" href="./assets/img/favicon.png" />
     <link rel="apple-touch-icon" href="./assets/img/icon-512.png" />
+
+    <!-- Link previews (Discord, Reddit, WhatsApp, X…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Caravan Trading Game" />
+    <meta property="og:title" content="Caravan Trading Game" />
+    <meta
+      property="og:description"
+      content="Buy low, sell high, survive the desert. A free turn-based trading game in your browser."
+    />
+    <meta property="og:url" content="https://pannacottafactory.github.io/Caravan/" />
+    <meta property="og:image" content="https://pannacottafactory.github.io/Caravan/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Caravan Trading Game logo: a market stall with trade goods" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Tells search engines this page is a game -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Caravan Trading Game",
+        "url": "https://pannacottafactory.github.io/Caravan/",
+        "image": "https://pannacottafactory.github.io/Caravan/og-image.png",
+        "description": "A free turn-based trading game: lead a desert caravan, buy low, sell high, feed your camels and survive disasters.",
+        "genre": ["Strategy", "Trading", "Turn-based"],
+        "gamePlatform": "Web browser",
+        "applicationCategory": "Game",
+        "operatingSystem": "Any",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "author": { "@type": "Organization", "name": "Pannacotta Factory" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+    <style>
+      body { margin: 0; background: #140e0c; color: #cdbba5; font-family: Georgia, serif; }
+      .intro { max-width: 36rem; margin: 0 auto; padding: 3rem 1rem; line-height: 1.5; }
+      .intro h1 { color: #f4b74a; }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Shown until the game loads (and to crawlers that don't run JavaScript). Removed on start. -->
+      <section class="intro">
+        <h1>Caravan Trading Game</h1>
+        <p>
+          Lead a desert caravan from town to town. Buy goods cheap, sell them high, feed your camels and traders,
+          and make the biggest fortune before your journey ends.
+        </p>
+        <ul>
+          <li>Turn-based trading: food, spices, pottery, marble, silk and jewelry, with prices that change every day.</li>
+          <li>22 factions to unlock, each with its own rules.</li>
+          <li>Meet the Mysterious Merchant and the Old Witch, then face disasters in Traveler mode.</li>
+          <li>A daily challenge with an online leaderboard.</li>
+        </ul>
+        <p>Free, no ads, no download. Plays on desktop and mobile.</p>
+        <noscript><p><strong>Please enable JavaScript to play.</strong></p></noscript>
+      </section>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
