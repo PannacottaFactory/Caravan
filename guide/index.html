@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#140e0c" />
+    <title>How to Play Caravan Trading Game – Rules, Goods, Factions & Tips</title>
+    <meta
+      name="description"
+      content="Complete guide to Caravan Trading Game, the free desert trading game: rules, prices of every good, the 22 factions and their bonuses, the Mysterious Merchant, the Old Witch, disasters and tips for a high score."
+    />
+    <link rel="canonical" href="https://pannacottafactory.github.io/Caravan/guide/" />
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Caravan Trading Game" />
+    <meta property="og:title" content="How to Play Caravan Trading Game" />
+    <meta property="og:description" content="Rules, goods, factions and tips for the free desert trading game." />
+    <meta property="og:url" content="https://pannacottafactory.github.io/Caravan/guide/" />
+    <meta property="og:image" content="https://pannacottafactory.github.io/Caravan/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Caravan Trading Game", "item": "https://pannacottafactory.github.io/Caravan/" },
+          { "@type": "ListItem", "position": 2, "name": "How to play", "item": "https://pannacottafactory.github.io/Caravan/guide/" }
+        ]
+      }
+    </script>
+    <style>
+      :root {
+        --bg: #140e0c;
+        --panel: #21170f;
+        --text: #e2d3bf;
+        --muted: #a8957f;
+        --gold: #f4b74a;
+        --line: rgb(255 235 210 / 0.12);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; }
+      main { max-width: 46rem; margin: 0 auto; padding: 2rem 16px 4rem; }
+      a { color: var(--gold); }
+      h1 { color: var(--gold); font-size: clamp(1.8rem, 5vw, 2.6rem); line-height: 1.15; margin: 0.5rem 0 1rem; }
+      h2 { color: var(--gold); margin-top: 2.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+      h3 { margin-bottom: 0.3rem; }
+      .crumbs { font-size: 0.9rem; color: var(--muted); }
+      .lead { font-size: 1.15rem; }
+      .play {
+        display: inline-block; margin: 0.5rem 0 1rem; padding: 0.75rem 1.6rem; border-radius: 999px;
+        background: var(--gold); color: #2a1a08; font-weight: bold; text-decoration: none; font-family: system-ui, sans-serif;
+      }
+      .play:hover { filter: brightness(1.08); }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+      th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: normal; }
+      td:not(:first-child), th:not(:first-child) { text-align: right; }
+      .factions td:last-child, .factions th:last-child { text-align: left; }
+      figure { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; padding: 1rem; background: var(--panel); border-radius: 12px; }
+      figure img { width: 88px; height: 88px; object-fit: contain; flex: none; }
+      figure p { margin: 0; }
+      footer { margin-top: 3rem; color: var(--muted); font-size: 0.9rem; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="../">Caravan Trading Game</a> › How to play</nav>
+      <h1>How to play Caravan Trading Game</h1>
+      <p class="lead">
+        Caravan is a free turn-based trading game you play in your browser. You lead a merchant caravan across the
+        desert: buy goods cheap, sell them high, feed your camels and traders, and finish the journey with the biggest
+        fortune you can.
+      </p>
+      <a class="play" href="../">Play Caravan for free</a>
+
+      <h2>The goal</h2>
+      <p>
+        Be the richest trader of your faction when the journey ends. Your final score is your gold, plus the value of
+        the goods still in your cargo, plus your crew: each trader is worth 25 points and each camel 30 points.
+      </p>
+
+      <h2>The rules in five steps</h2>
+      <ol>
+        <li><strong>One action per day.</strong> Each day you buy, sell, recruit or save gold, then the day ends.</li>
+        <li><strong>Buy low, sell high.</strong> Every good has a buying price, a selling price and a weight.</li>
+        <li><strong>Traders and camels.</strong> Traders earn gold every day. Camels carry more cargo.</li>
+        <li><strong>Feed your crew.</strong> Each trader and camel eats one food per day. No food, no caravan.</li>
+        <li><strong>Save gold</strong> to earn a share of your fortune. The saving rate drops each time you use it.</li>
+      </ol>
+
+      <h2>Trade goods and prices</h2>
+      <p>
+        Six goods are traded on the market. Heavy, expensive goods bring the biggest profits, but your camels can only
+        carry so much weight. Base prices are below; factions, events and disasters change them during a game.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Good</th><th>Buy</th><th>Sell</th><th>Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Food</td><td>3</td><td>2</td><td>2</td></tr>
+            <tr><td>Spices</td><td>5</td><td>10</td><td>4</td></tr>
+            <tr><td>Pottery</td><td>20</td><td>33</td><td>5</td></tr>
+            <tr><td>Marble</td><td>110</td><td>300</td><td>20</td></tr>
+            <tr><td>Silk</td><td>530</td><td>1,150</td><td>8</td></tr>
+            <tr><td>Jewelry</td><td>900</td><td>2,500</td><td>12</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Game modes</h2>
+      <h3>Classical mode</h3>
+      <p>A 15-day journey with no disasters. You start with one trader, one camel and a little food. The best way to learn the game.</p>
+      <h3>Traveler mode</h3>
+      <p>
+        A 20-day journey where you build your caravan from nothing: no trader, no camel, three improvement points to
+        spend, and a disaster on the road. Each faction unlocks its Traveler mode once you reach a high enough score in
+        Classical mode.
+      </p>
+      <h3>Daily challenge</h3>
+      <p>Every day, the same journey for every player, with one try. Compare your score on the online leaderboard.</p>
+
+      <h2>Encounters on the road</h2>
+      <figure>
+        <img src="../assets/img/merchant.png" alt="The Mysterious Merchant" width="88" height="88" loading="lazy" />
+        <p>
+          <strong>The Mysterious Merchant</strong> shows up in the middle of your journey with rare items: the Canvas
+          bag (+20 weight), the Sturdy saddle (camels carry 20 more), the Magic Clepsydra (one more day), the Hand of
+          Midas (+100 gold on every sale), the Wooden statuette (+500 points per camel and trader at the end) and more.
+        </p>
+      </figure>
+      <figure>
+        <img src="../assets/img/witch.png" alt="The Old Witch" width="88" height="88" loading="lazy" />
+        <p>
+          <strong>The Old Witch</strong> comes later and offers powerful spells that can turn a good journey into a
+          great one.
+        </p>
+      </figure>
+      <h3>Disasters (Traveler mode)</h3>
+      <p>
+        Near the end of a Traveler journey, fate strikes: a thief empties your pockets, a camel breaks a leg, your
+        traders leave, the marble market collapses, a silk craze sends prices soaring… Keep some margin and adapt.
+      </p>
+
+      <h2>The 22 factions</h2>
+      <p>
+        You start with Normalia. Reach the score shown in the game with a faction to unlock the next one. Each faction
+        changes the rules in its own way.
+      </p>
+      <div class="table-wrap">
+        <table class="factions">
+          <thead><tr><th>Faction</th><th>Bonus</th></tr></thead>
+          <tbody>
+            <tr><td>Normalia</td><td>No effect</td></tr>
+            <tr><td>Fang-Mô</td><td>Begin with 1 pottery</td></tr>
+            <tr><td>L'Exquise</td><td>Traders don't need food</td></tr>
+            <tr><td>Mahaji</td><td>Selling price of spices increased from 10 to 15</td></tr>
+            <tr><td>Tocaccialli</td><td>One more day</td></tr>
+            <tr><td>Bajaar</td><td>Traders income is doubled</td></tr>
+            <tr><td>Doba Lao</td><td>Initial saving rate increased by 20%</td></tr>
+            <tr><td>Huangoz</td><td>Marble buying price decreased from 110 to 90</td></tr>
+            <tr><td>Port-Willam</td><td>Initial weight increased by 15</td></tr>
+            <tr><td>Moonin</td><td>Call the merchant at any moment</td></tr>
+            <tr><td>Cornecopea</td><td>Food is free</td></tr>
+            <tr><td>Eduming</td><td>Every new trader increases the saving rate by 10%</td></tr>
+            <tr><td>Octoyashi</td><td>Begin the game with 8 food</td></tr>
+            <tr><td>Kifuaï</td><td>Initial gold increased by 10</td></tr>
+            <tr><td>Skjollird</td><td>Camels are more expensive but carry more</td></tr>
+            <tr><td>Petrinov</td><td>Always saves at the same rate</td></tr>
+            <tr><td>Jilliqo</td><td>Daily income increased by 10</td></tr>
+            <tr><td>Gayawaku</td><td>Food weighs nothing</td></tr>
+            <tr><td>Vilparino</td><td>Merchant's prices decreased by 20%</td></tr>
+            <tr><td>Sanctifan</td><td>Can save once for free</td></tr>
+            <tr><td>Mehaz</td><td>Camels don't need food</td></tr>
+            <tr><td>Ipartus</td><td>Silk buying price decreased by 100</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Tips for a high score</h2>
+      <ul>
+        <li>Recruit traders early: their daily income adds up over the whole journey.</li>
+        <li>Never forget food. Count how many days are left before you sell all of it.</li>
+        <li>Watch the weight, not only the price. Silk earns more per kilo than marble.</li>
+        <li>Save gold when the rate is high, because it drops every time you save.</li>
+        <li>Keep some gold for the Mysterious Merchant: a good item can be worth thousands of points.</li>
+        <li>Play each faction to its strength: spices with Mahaji, marble with Huangoz, silk with Ipartus.</li>
+      </ul>
+
+      <h2>FAQ</h2>
+      <h3>Is Caravan free?</h3>
+      <p>Yes. Caravan Trading Game is free, with no ads and nothing to download.</p>
+      <h3>Can I play on my phone?</h3>
+      <p>Yes. It runs in any modern browser, on desktop, Android and iPhone.</p>
+      <h3>Is my progress saved?</h3>
+      <p>Your games, scores, unlocked factions and achievements are saved in your browser.</p>
+
+      <a class="play" href="../">Start your caravan</a>
+
+      <footer>Caravan Trading Game · Made by Pannacotta · Music by Tyler Cline</footer>
+    </main>
+  </body>
+</html>

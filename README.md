@@ -1,5 +1,7 @@
 # Caravan — web
 
+**[Play Caravan Trading Game for free in your browser](https://pannacottafactory.github.io/Caravan/)** · [How to play](https://pannacottafactory.github.io/Caravan/guide/)
+
 Web port of **Caravan Trading Game** (Unity / Android) — a turn-based trading game: buy, sell, profit.
 
 ## Commands
